@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown渲染测试</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.4.3/purify.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .markdown-content {
+            line-height: 1.6;
+            color: #333;
+        }
+        .markdown-content h1,
+        .markdown-content h2,
+        .markdown-content h3 {
+            margin: 16px 0 8px 0;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 12px 0;
+        }
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+            text-align: left;
+        }
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+        .markdown-content blockquote {
+            margin: 12px 0;
+            padding: 8px 16px;
+            border-left: 4px solid #667eea;
+            background-color: #f8f9fa;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h1>Markdown渲染测试</h1>
+    <div id="output" class="markdown-content"></div>
+
+    <script>
+        function renderMarkdown(content) {
+            try {
+                if (typeof marked === 'undefined') {
+                    console.error('Marked库未加载');
+                    return content;
+                }
+                
+                console.log('开始渲染Markdown');
+                
+                marked.setOptions({
+                    breaks: true,
+                    gfm: true,
+                    sanitize: false
+                });
+                
+                const htmlContent = marked.parse(content);
+                console.log('Markdown渲染完成');
+                
+                if (typeof DOMPurify !== 'undefined') {
+                    const cleanHtml = DOMPurify.sanitize(htmlContent, {
+                        ALLOWED_TAGS: [
+                            'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+                            'p', 'br', 'hr',
+                            'ul', 'ol', 'li',
+                            'strong', 'em', 'code', 'pre',
+                            'blockquote',
+                            'table', 'thead', 'tbody', 'tr', 'th', 'td',
+                            'div', 'span'
+                        ],
+                        ALLOWED_ATTR: ['class', 'id', 'style']
+                    });
+                    return cleanHtml;
+                } else {
+                    return htmlContent;
+                }
+            } catch (error) {
+                console.error('Markdown渲染错误:', error);
+                return content;
+            }
+        }
+
+        const testMarkdown = `
+# 测试标题
+
+这是一个**粗体文本**和*斜体文本*。
+
+## 表格测试
+| 时间 | 任务 | 负责人 |
+|------|------|--------|
+| 第1周 | 收集客户反馈 | 客户服务团队 |
+| 第2周 | 分析问题原因 | 质量管理部 |
+
+## 列表测试
+- 项目1
+- 项目2
+- 项目3
+
+> 这是一个引用块
+
+\`\`\`javascript
+function test() {
+    console.log("Hello World");
+}
+\`\`\`
+        `;
+
+        document.getElementById('output').innerHTML = renderMarkdown(testMarkdown);
+    </script>
+</body>
+</html> 

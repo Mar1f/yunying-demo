@@ -6,6 +6,8 @@
     <title>智能运营数据看板</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.4.3/purify.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -21,39 +23,56 @@
         }
 
         .container {
-            max-width: 1400px;
+            max-width: 100%;
             margin: 0 auto;
             padding: 20px;
+            display: flex;
+            gap: 20px;
+            min-height: 100vh;
         }
 
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-            color: white;
+        /* 左侧面板 */
+        .left-panel {
+            flex: 1;
+            max-width: 60%;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
         }
+
+        /* 右侧面板 */
+        .right-panel {
+            flex: 1;
+            max-width: 40%;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: stretch;
+        }
+
 
         .header h1 {
-            font-size: 2.5em;
+            font-size: 2.2em;
             margin-bottom: 10px;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
 
         .header p {
-            font-size: 1.2em;
+            font-size: 1.1em;
             opacity: 0.9;
         }
 
         .dashboard-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
         }
 
         .card {
             background: white;
             border-radius: 15px;
-            padding: 25px;
+            padding: 20px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
@@ -66,7 +85,7 @@
         .card h3 {
             color: #667eea;
             margin-bottom: 15px;
-            font-size: 1.3em;
+            font-size: 1.2em;
             border-bottom: 2px solid #f0f0f0;
             padding-bottom: 10px;
         }
@@ -75,8 +94,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
-            padding: 10px;
+            margin-bottom: 12px;
+            padding: 8px;
             background: #f8f9fa;
             border-radius: 8px;
         }
@@ -84,10 +103,11 @@
         .metric-label {
             font-weight: 500;
             color: #555;
+            font-size: 0.9em;
         }
 
         .metric-value {
-            font-size: 1.2em;
+            font-size: 1.1em;
             font-weight: bold;
             color: #667eea;
         }
@@ -95,28 +115,28 @@
         .import-section {
             background: white;
             border-radius: 15px;
-            padding: 25px;
+            padding: 20px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
 
         .import-section h3 {
             color: #667eea;
-            margin-bottom: 20px;
-            font-size: 1.3em;
+            margin-bottom: 15px;
+            font-size: 1.2em;
         }
 
         .import-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
         }
 
         .import-item {
             border: 2px dashed #e0e0e0;
             border-radius: 10px;
-            padding: 20px;
+            padding: 15px;
             text-align: center;
             transition: border-color 0.3s ease;
         }
@@ -127,13 +147,14 @@
 
         .import-item h4 {
             color: #667eea;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
+            font-size: 1em;
         }
 
         .import-item p {
             color: #666;
-            font-size: 0.9em;
-            margin-bottom: 15px;
+            font-size: 0.8em;
+            margin-bottom: 10px;
         }
 
         .file-input {
@@ -144,10 +165,10 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 20px;
+            padding: 8px 15px;
+            border-radius: 15px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 12px;
             transition: transform 0.3s ease;
         }
 
@@ -158,8 +179,8 @@
         .data-stats {
             display: flex;
             justify-content: space-around;
-            margin-top: 20px;
-            padding: 15px;
+            margin-top: 15px;
+            padding: 12px;
             background: #f8f9fa;
             border-radius: 10px;
         }
@@ -169,19 +190,19 @@
         }
 
         .stat-number {
-            font-size: 1.5em;
+            font-size: 1.3em;
             font-weight: bold;
             color: #667eea;
         }
 
         .stat-label {
-            font-size: 0.9em;
+            font-size: 0.8em;
             color: #666;
         }
 
         .chart-container {
-            height: 300px;
-            margin-top: 20px;
+            height: 250px;
+            margin-top: 15px;
         }
 
         .loading {
@@ -193,27 +214,29 @@
         .error {
             color: #dc3545;
             background: #f8d7da;
-            padding: 10px;
+            padding: 8px;
             border-radius: 5px;
-            margin: 10px 0;
+            margin: 8px 0;
+            font-size: 0.9em;
         }
 
         .success {
             color: #155724;
             background: #d4edda;
-            padding: 10px;
+            padding: 8px;
             border-radius: 5px;
-            margin: 10px 0;
+            margin: 8px 0;
+            font-size: 0.9em;
         }
 
         .clear-btn {
             background: #dc3545;
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 20px;
+            padding: 8px 15px;
+            border-radius: 15px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 12px;
             transition: background-color 0.3s ease;
         }
 
@@ -221,83 +244,30 @@
             background: #c82333;
         }
 
-        .card-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-radius: 15px 15px 0 0;
-            padding: 15px 25px;
-            margin: -25px -25px 20px -25px;
-        }
-
-        .card-header h5 {
-            margin: 0;
-            font-size: 1.2em;
-        }
-
-        .form-label {
-            font-weight: 500;
-            color: #555;
-            margin-bottom: 8px;
-        }
-
-        .form-control {
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            padding: 12px 15px;
-            font-size: 14px;
-            transition: border-color 0.3s ease;
-        }
-
-        .form-control:focus {
-            border-color: #667eea;
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            border-radius: 25px;
-            padding: 12px 25px;
-            font-size: 14px;
-            font-weight: 500;
-            transition: transform 0.3s ease;
-        }
-
-        .btn-primary:hover {
-            transform: scale(1.05);
-        }
-
-        .alert {
-            border-radius: 10px;
-            border: none;
-            padding: 15px 20px;
-        }
-
-        .alert-info {
-            background: #e3f2fd;
-            color: #1976d2;
-        }
-
-        .text-danger {
-            color: #dc3545;
-        }
-
-        .text-center {
-            text-align: center;
+        /* AI对话区域样式 */
+        .ai-chat-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            height: calc(100vh - 40px);
+            display: flex;
+            flex-direction: column;
+            margin-top: 0;
         }
 
         .ai-chat-card .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px 15px 0 0;
+            padding: 15px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 15px 25px;
-            margin: -25px -25px 20px -25px;
         }
 
         .ai-chat-card .card-title {
             margin: 0;
-            font-size: 1.2em;
+            font-size: 1.1em;
         }
 
         .ai-chat-card .ai-status {
@@ -306,60 +276,60 @@
         }
 
         .ai-chat-card .status-dot {
-            width: 10px;
-            height: 10px;
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
-            background-color: #4CAF50; /* Green for ready */
-            margin-right: 8px;
+            background-color: #4CAF50;
+            margin-right: 6px;
         }
 
         .ai-chat-card .status-text {
-            font-size: 0.9em;
-            color: #666;
+            font-size: 0.8em;
+            color: rgba(255,255,255,0.8);
         }
 
         .chat-container {
             display: flex;
             flex-direction: column;
-            height: 600px; /* 增加高度从400px到600px */
+            flex: 1;
             border: 1px solid #e0e0e0;
-            border-radius: 10px;
-            overflow-y: auto;
+            border-radius: 0 0 15px 15px;
+            overflow: hidden;
             background-color: #f9f9f9;
-            margin-bottom: 15px;
         }
 
         .chat-messages {
             flex-grow: 1;
             padding: 15px;
             overflow-y: auto;
+            max-height: calc(100vh - 190px);
         }
 
         .message {
             display: flex;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             align-items: flex-start;
         }
 
         .message-avatar {
-            width: 40px;
-            height: 40px;
+            width: 35px;
+            height: 35px;
             border-radius: 50%;
             background-color: #667eea;
             color: white;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 1.2em;
-            margin-right: 10px;
+            font-size: 1em;
+            margin-right: 8px;
             flex-shrink: 0;
         }
 
         .message-content {
             background-color: #e0e0e0;
             border-radius: 10px;
-            padding: 10px 15px;
-            max-width: 80%;
+            padding: 8px 12px;
+            max-width: 85%;
             position: relative;
             flex-grow: 1;
         }
@@ -367,14 +337,14 @@
         .message-header {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 5px;
-            font-size: 0.9em;
+            margin-bottom: 4px;
+            font-size: 0.8em;
             color: #555;
         }
 
         .message-text {
-            font-size: 0.95em;
-            line-height: 1.5;
+            font-size: 0.9em;
+            line-height: 1.4;
             color: #333;
         }
 
@@ -395,31 +365,41 @@
         .chat-input-area {
             display: flex;
             flex-direction: column;
-            padding: 15px;
+            padding: 12px;
             border-top: 1px solid #e0e0e0;
+            background: white;
         }
 
         .input-wrapper {
             display: flex;
             align-items: flex-end;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         .chat-input {
             flex-grow: 1;
-            margin-right: 10px;
+            margin-right: 8px;
             resize: none;
-            padding-right: 10px; /* Add some space for actions */
+            padding: 8px 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 13px;
+            font-family: inherit;
+        }
+
+        .chat-input:focus {
+            border-color: #667eea;
+            outline: none;
         }
 
         .input-actions {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
 
         .char-count {
-            font-size: 0.9em;
+            font-size: 0.8em;
             color: #666;
         }
 
@@ -427,14 +407,14 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            padding: 8px 15px;
-            border-radius: 20px;
+            padding: 6px 12px;
+            border-radius: 15px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 12px;
             transition: transform 0.3s ease;
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 4px;
         }
 
         .send-btn:hover {
@@ -444,16 +424,16 @@
         .quick-questions {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 10px;
+            gap: 8px;
+            margin-top: 8px;
         }
 
         .quick-btn {
             background: #f0f0f0;
             border: 1px solid #e0e0e0;
-            border-radius: 20px;
-            padding: 8px 15px;
-            font-size: 13px;
+            border-radius: 15px;
+            padding: 6px 12px;
+            font-size: 11px;
             cursor: pointer;
             transition: background-color 0.3s ease, border-color 0.3s ease;
         }
@@ -559,29 +539,70 @@
         }
 
         /* 响应式设计 */
+        @media (max-width: 1200px) {
+            .container {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .left-panel, .right-panel {
+                max-width: 100%;
+            }
+            
+            .ai-chat-card {
+                height: calc(100vh - 40px);
+            }
+            
+            .chat-messages {
+                max-height: calc(100vh - 190px);
+            }
+            
+            .dashboard-grid {
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            }
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 10px;
+                gap: 10px;
             }
             
             .header h1 {
-                font-size: 2em;
+                font-size: 1.6em;
             }
             
-            .dashboard-grid, .import-grid {
+            .header p {
+                font-size: 1em;
+            }
+            
+            .dashboard-grid {
                 grid-template-columns: 1fr;
+                gap: 10px;
             }
             
-            .chat-container {
-                height: 300px;
+            .import-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            
+            .ai-chat-card {
+                height: calc(100vh - 40px);
+            }
+            
+            .chat-messages {
+                max-height: calc(100vh - 190px);
             }
             
             .quick-questions {
                 flex-direction: column;
+                gap: 5px;
             }
             
             .quick-btn {
                 text-align: center;
+                padding: 8px 12px;
+                font-size: 12px;
             }
             
             .input-wrapper {
@@ -591,11 +612,51 @@
             
             .chat-input {
                 margin-right: 0;
-                margin-bottom: 10px;
+                margin-bottom: 8px;
             }
             
             .input-actions {
                 justify-content: space-between;
+            }
+            
+            .card {
+                padding: 15px;
+            }
+            
+            .import-section {
+                padding: 15px;
+            }
+            
+            .import-item {
+                padding: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1.4em;
+            }
+            
+            .ai-chat-card {
+                height: calc(100vh - 40px);
+            }
+            
+            .chat-messages {
+                max-height: calc(100vh - 190px);
+            }
+            
+            .message-avatar {
+                width: 30px;
+                height: 30px;
+                font-size: 0.9em;
+            }
+            
+            .message-content {
+                padding: 6px 10px;
+            }
+            
+            .message-text {
+                font-size: 0.85em;
             }
         }
 
@@ -617,130 +678,280 @@
         .chat-messages::-webkit-scrollbar-thumb:hover {
             background: #a8a8a8;
         }
+
+        /* Markdown样式 */
+        .markdown-content {
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .markdown-content h1,
+        .markdown-content h2,
+        .markdown-content h3,
+        .markdown-content h4,
+        .markdown-content h5,
+        .markdown-content h6 {
+            margin: 16px 0 8px 0;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .markdown-content h1 { font-size: 1.8em; border-bottom: 2px solid #eee; padding-bottom: 8px; }
+        .markdown-content h2 { font-size: 1.5em; border-bottom: 1px solid #eee; padding-bottom: 6px; }
+        .markdown-content h3 { font-size: 1.3em; }
+        .markdown-content h4 { font-size: 1.1em; }
+        .markdown-content h5 { font-size: 1em; }
+        .markdown-content h6 { font-size: 0.9em; }
+
+        .markdown-content p {
+            margin: 8px 0;
+        }
+
+        .markdown-content ul,
+        .markdown-content ol {
+            margin: 8px 0;
+            padding-left: 24px;
+        }
+
+        .markdown-content li {
+            margin: 4px 0;
+        }
+
+        .markdown-content blockquote {
+            margin: 12px 0;
+            padding: 8px 16px;
+            border-left: 4px solid #667eea;
+            background-color: #f8f9fa;
+            color: #666;
+        }
+
+        .markdown-content code {
+            background-color: #f1f1f1;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 12px;
+            overflow-x: auto;
+            margin: 12px 0;
+        }
+
+        .markdown-content pre code {
+            background-color: transparent;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 12px 0;
+            font-size: 0.9em;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .markdown-content table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        .markdown-content table tr:hover {
+            background-color: #e9ecef;
+        }
+
+        .markdown-content strong {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .markdown-content em {
+            font-style: italic;
+        }
+
+        .markdown-content hr {
+            border: none;
+            border-top: 1px solid #eee;
+            margin: 20px 0;
+        }
+
+        .markdown-content .highlight {
+            background-color: #fff3cd;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>🚗 智能运营数据看板</h1>
-            <p>数据驱动决策 · 智能分析预警 · 精准运营管理</p>
-        </div>
+        <!-- 左侧面板：Excel导入和数据展示 -->
+        <div class="left-panel">
 
-        <!-- Excel数据导入区域 -->
-        <div class="import-section">
-            <h3>📊 Excel数据导入</h3>
-            <p style="margin-bottom: 20px; color: #666;">请按照模板格式上传Excel文件，系统将自动解析并展示数据</p>
-            
-            <div class="import-grid">
-                <div class="import-item">
-                    <h4>🏭 生产数据</h4>
-                    <p>产品名称、生产数量、缺陷数量、生产日期、生产线、单位成本、效率率</p>
-                    <input type="file" id="production-file" class="file-input" accept=".xlsx,.xls" />
-                    <button class="upload-btn" onclick="document.getElementById('production-file').click()">选择文件</button>
+            <!-- Excel数据导入区域 -->
+            <div class="import-section">
+                <h3>📊 Excel数据导入</h3>
+                <p style="margin-bottom: 15px; color: #666; font-size: 0.9em;">请按照模板格式上传Excel文件，系统将自动解析并展示数据</p>
+                
+                <div class="import-grid">
+                    <div class="import-item">
+                        <h4>🏭 生产数据</h4>
+                        <p>产品名称、生产数量、缺陷数量、生产日期、生产线、单位成本、效率率</p>
+                        <input type="file" id="production-file" class="file-input" accept=".xlsx,.xls" />
+                        <button class="upload-btn" onclick="document.getElementById('production-file').click()">选择文件</button>
+                    </div>
+                    
+                    <div class="import-item">
+                        <h4>💰 销售数据</h4>
+                        <p>产品名称、销售数量、销售金额、销售日期、客户ID、区域、销售渠道、利润率</p>
+                        <input type="file" id="sales-file" class="file-input" accept=".xlsx,.xls" />
+                        <button class="upload-btn" onclick="document.getElementById('sales-file').click()">选择文件</button>
+                    </div>
+                    
+                    <div class="import-item">
+                        <h4>📦 库存数据</h4>
+                        <p>产品名称、当前库存、最低库存、最高库存、仓库位置、单位成本、供应商ID</p>
+                        <input type="file" id="inventory-file" class="file-input" accept=".xlsx,.xls" />
+                        <button class="upload-btn" onclick="document.getElementById('inventory-file').click()">选择文件</button>
+                    </div>
+                    
+                    <div class="import-item">
+                        <h4>👥 客户反馈</h4>
+                        <p>客户ID、产品名称、反馈类型、反馈内容、满意度评分、反馈日期、状态、优先级</p>
+                        <input type="file" id="feedback-file" class="file-input" accept=".xlsx,.xls" />
+                        <button class="upload-btn" onclick="document.getElementById('feedback-file').click()">选择文件</button>
+                    </div>
                 </div>
                 
-                <div class="import-item">
-                    <h4>💰 销售数据</h4>
-                    <p>产品名称、销售数量、销售金额、销售日期、客户ID、区域、销售渠道、利润率</p>
-                    <input type="file" id="sales-file" class="file-input" accept=".xlsx,.xls" />
-                    <button class="upload-btn" onclick="document.getElementById('sales-file').click()">选择文件</button>
+                <div style="text-align: center; margin-top: 15px;">
+                    <button class="clear-btn" onclick="clearAllData()">清除所有数据</button>
                 </div>
                 
-                <div class="import-item">
-                    <h4>📦 库存数据</h4>
-                    <p>产品名称、当前库存、最低库存、最高库存、仓库位置、单位成本、供应商ID</p>
-                    <input type="file" id="inventory-file" class="file-input" accept=".xlsx,.xls" />
-                    <button class="upload-btn" onclick="document.getElementById('inventory-file').click()">选择文件</button>
+                <div class="data-stats" id="data-stats">
+                    <div class="stat-item">
+                        <div class="stat-number" id="production-count">0</div>
+                        <div class="stat-label">生产数据</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="sales-count">0</div>
+                        <div class="stat-label">销售数据</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="inventory-count">0</div>
+                        <div class="stat-label">库存数据</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="feedback-count">0</div>
+                        <div class="stat-label">反馈数据</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 实时数据卡片 -->
+            <div class="dashboard-grid">
+                <div class="card">
+                    <h3>📊 生产概况</h3>
+                    <div id="production-metrics">
+                        <div class="loading">请先导入数据...</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>💰 销售概况</h3>
+                    <div id="sales-metrics">
+                        <div class="loading">请先导入数据...</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>📦 库存概况</h3>
+                    <div id="inventory-metrics">
+                        <div class="loading">请先导入数据...</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>👥 客户反馈</h3>
+                    <div id="feedback-metrics">
+                        <div class="loading">请先导入数据...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 图表展示区域 -->
+            <div class="dashboard-grid">
+                <div class="card">
+                    <h3>📈 销售趋势</h3>
+                    <div id="sales-chart" class="chart-container"></div>
                 </div>
                 
-                <div class="import-item">
-                    <h4>👥 客户反馈</h4>
-                    <p>客户ID、产品名称、反馈类型、反馈内容、满意度评分、反馈日期、状态、优先级</p>
-                    <input type="file" id="feedback-file" class="file-input" accept=".xlsx,.xls" />
-                    <button class="upload-btn" onclick="document.getElementById('feedback-file').click()">选择文件</button>
-                </div>
-            </div>
-            
-            <div style="text-align: center; margin-top: 20px;">
-                <button class="clear-btn" onclick="clearAllData()">清除所有数据</button>
-            </div>
-            
-            <div class="data-stats" id="data-stats">
-                <div class="stat-item">
-                    <div class="stat-number" id="production-count">0</div>
-                    <div class="stat-label">生产数据</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number" id="sales-count">0</div>
-                    <div class="stat-label">销售数据</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number" id="inventory-count">0</div>
-                    <div class="stat-label">库存数据</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number" id="feedback-count">0</div>
-                    <div class="stat-label">反馈数据</div>
+                <div class="card">
+                    <h3>🏭 生产效率</h3>
+                    <div id="production-chart" class="chart-container"></div>
                 </div>
             </div>
         </div>
 
-        <!-- 实时数据卡片 -->
-        <div class="dashboard-grid">
-            <div class="card">
-                <h3>📊 生产概况</h3>
-                <div id="production-metrics">
-                    <div class="loading">请先导入数据...</div>
+        <!-- 右侧面板：AI对话功能 -->
+        <div class="right-panel">
+            <div class="ai-chat-card">
+                <div class="card-header">
+                    <h5 class="card-title">
+                        🤖 AI智能对话助手
+                    </h5>
+                    <div class="ai-status">
+                        <span class="status-dot"></span>
+                        <span class="status-text">就绪</span>
+                    </div>
                 </div>
-            </div>
-
-            <div class="card">
-                <h3>💰 销售概况</h3>
-                <div id="sales-metrics">
-                    <div class="loading">请先导入数据...</div>
-                </div>
-            </div>
-
-            <div class="card">
-                <h3>📦 库存概况</h3>
-                <div id="inventory-metrics">
-                    <div class="loading">请先导入数据...</div>
-                </div>
-            </div>
-
-            <div class="card">
-                <h3>👥 客户反馈</h3>
-                <div id="feedback-metrics">
-                    <div class="loading">请先导入数据...</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- AI智能对话区域 -->
-        <div class="card ai-chat-card">
-            <div class="card-header">
-                <h5 class="card-title">
-                    <i class="fas fa-robot"></i> AI智能对话助手
-                </h5>
-                <div class="ai-status">
-                    <span class="status-dot"></span>
-                    <span class="status-text">就绪</span>
-                </div>
-            </div>
-            <div class="card-body">
                 <div class="chat-container">
                     <div class="chat-messages" id="aiChatMessages">
                         <div class="message ai-message">
                             <div class="message-avatar">
-                                <i class="fas fa-robot"></i>
+                                🤖
                             </div>
                             <div class="message-content">
                                 <div class="message-header">
                                     <strong>AI助手</strong>
                                     <span class="message-time" id="currentTime"></span>
                                 </div>
-                                <div class="message-text">
-                                    您好！我是您的智能运营分析助手。我可以帮您分析生产、销售、库存、客户反馈等各个维度的数据。请先导入Excel数据，然后告诉我您想了解什么？
+                                <div class="message-text markdown-content">
+                                    <h1>🤖 智能运营分析助手</h1>
+                                    
+                                    <p>您好！我是您的智能运营分析助手。我可以帮您分析生产、销售、库存、客户反馈等各个维度的数据。</p>
+                                    
+<!--                                    <h2>📊 支持的分析功能</h2>-->
+<!--                                    -->
+<!--                                    <ul>-->
+<!--                                        <li><strong>生产数据分析</strong>：生产效率、缺陷率、成本控制</li>-->
+<!--                                        <li><strong>销售数据分析</strong>：销售趋势、利润分析、区域表现</li>-->
+<!--                                        <li><strong>库存数据分析</strong>：库存水平、周转率、风险预警</li>-->
+<!--                                        <li><strong>客户反馈分析</strong>：满意度评分、投诉处理、改进建议</li>-->
+<!--                                    </ul>-->
+                                    
+                                    <h2>🚀 使用步骤</h2>
+                                    
+                                    <ol>
+                                        <li>先导入相应的Excel数据文件</li>
+                                        <li>然后告诉我您想了解什么</li>
+                                        <li>我将为您生成详细的分析报告和可视化图表</li>
+                                    </ol>
+                                    
+                                    <p><strong>请先上传Excel数据！</strong></p>
                                 </div>
                             </div>
                         </div>
@@ -749,7 +960,7 @@
                     <div class="chat-input-area">
                         <div class="input-wrapper">
                             <textarea 
-                                class="form-control chat-input" 
+                                class="chat-input" 
                                 id="aiQuestion" 
                                 rows="3" 
                                 placeholder="请输入您的问题，例如：分析一下生产效率和缺陷率情况？销售数据表现如何？库存是否存在风险？"
@@ -757,35 +968,22 @@
                             ></textarea>
                             <div class="input-actions">
                                 <span class="char-count" id="charCount">0/500</span>
-                                <button type="button" class="btn btn-primary send-btn" onclick="askAI()" id="sendBtn">
-                                    <i class="fas fa-paper-plane"></i>
-                                    <span>发送</span>
+                                <button type="button" class="send-btn" onclick="askAI()" id="sendBtn">
+                                    📤 发送
                                 </button>
                             </div>
                         </div>
                         
                         <div class="quick-questions">
-                            <span class="quick-label">快速问题：</span>
+                            <span style="font-size: 0.8em; color: #555; margin-right: 8px;">快速问题：</span>
                             <button class="quick-btn" onclick="askQuickQuestion('分析一下生产效率和缺陷率情况，并生成相关图表')">生产效率分析</button>
                             <button class="quick-btn" onclick="askQuickQuestion('销售数据表现如何，请生成销售趋势图表')">销售表现</button>
                             <button class="quick-btn" onclick="askQuickQuestion('库存是否存在风险，请生成库存分布图表')">库存风险</button>
                             <button class="quick-btn" onclick="askQuickQuestion('客户满意度如何，请生成满意度分析图表')">客户满意度</button>
+<!--                            <button class="quick-btn" onclick="testMarkdownInChat()" style="background-color: #ff9800; color: white;">测试Markdown</button>-->
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <!-- 图表展示区域 -->
-        <div class="dashboard-grid">
-            <div class="card">
-                <h3>📈 销售趋势</h3>
-                <div id="sales-chart" class="chart-container"></div>
-            </div>
-            
-            <div class="card">
-                <h3>🏭 生产效率</h3>
-                <div id="production-chart" class="chart-container"></div>
             </div>
         </div>
     </div>
@@ -800,6 +998,9 @@
             initializeCharts();
             setupFileUploads();
             loadDashboardData(); // 添加这行来加载初始数据
+            
+            // 测试Markdown渲染功能
+            testMarkdownRendering();
             
             // 设置当前时间
             updateCurrentTime();
@@ -829,6 +1030,51 @@
                 }
             });
         });
+
+        // 测试Markdown渲染功能
+        function testMarkdownRendering() {
+            console.log('开始测试Markdown渲染功能...');
+            
+            // 检查库是否加载
+            if (typeof marked === 'undefined') {
+                console.error('❌ Marked库未加载');
+                return;
+            }
+            
+            console.log('✅ Marked库已加载');
+            
+            const testMarkdown = `# 测试标题
+
+这是一个**粗体文本**和*斜体文本*。
+
+## 表格测试
+| 列1 | 列2 | 列3 |
+|-----|-----|-----|
+| 数据1 | 数据2 | 数据3 |
+
+## 列表测试
+- 项目1
+- 项目2
+- 项目3
+
+> 这是一个引用块`;
+            
+            try {
+                const rendered = renderMarkdown(testMarkdown);
+                console.log('Markdown测试结果:', rendered);
+                
+                // 检查是否包含HTML标签
+                if (rendered.includes('<h1>') || rendered.includes('<table>')) {
+                    console.log('✅ Markdown渲染功能正常');
+                } else {
+                    console.log('❌ Markdown渲染功能异常 - 未生成HTML标签');
+                    console.log('原始内容:', testMarkdown);
+                    console.log('渲染结果:', rendered);
+                }
+            } catch (error) {
+                console.error('❌ Markdown渲染测试失败:', error);
+            }
+        }
 
         // 更新当前时间
         function updateCurrentTime() {
@@ -921,6 +1167,8 @@
                     </div>
                 `;
             } else {
+                // 对AI消息进行Markdown渲染
+                const renderedContent = renderMarkdown(content);
                 messageDiv.innerHTML = `
                     <div class="message-avatar">
                         <i class="fas fa-robot"></i>
@@ -930,13 +1178,49 @@
                             <strong>AI助手</strong>
                             <span class="message-time">${timeString}</span>
                         </div>
-                        <div class="message-text">${content.replace(/\n/g, '<br>')}</div>
+                        <div class="message-text markdown-content">${renderedContent}</div>
                     </div>
                 `;
             }
             
             messagesContainer.appendChild(messageDiv);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // Markdown渲染函数
+        function renderMarkdown(content) {
+            try {
+                // 检查marked库是否已加载
+                if (typeof marked === 'undefined') {
+                    console.error('Marked库未加载');
+                    return content.replace(/\n/g, '<br>');
+                }
+                
+                console.log('开始渲染Markdown，内容长度:', content.length);
+                
+                // 使用简单的配置
+                marked.setOptions({
+                    breaks: true,
+                    gfm: true
+                });
+                
+                // 渲染Markdown
+                const htmlContent = marked.parse(content);
+                console.log('Markdown渲染完成，HTML长度:', htmlContent.length);
+                
+                // 简单的HTML清理，不使用DOMPurify
+                const cleanHtml = htmlContent
+                    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // 移除script标签
+                    .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, ''); // 移除iframe标签
+                
+                console.log('HTML清理完成');
+                return cleanHtml;
+                
+            } catch (error) {
+                console.error('Markdown渲染错误:', error);
+                // 如果渲染失败，返回原始内容
+                return content.replace(/\n/g, '<br>');
+            }
         }
 
         // 添加带图表的聊天消息
@@ -965,6 +1249,8 @@
                     </div>
                 `;
             } else {
+                // 对AI消息进行Markdown渲染
+                const renderedContent = renderMarkdown(content);
                 let chartsHtml = '';
                 const chartIds = [];
                 
@@ -992,13 +1278,15 @@
                             <strong>AI助手</strong>
                             <span class="message-time">${timeString}</span>
                         </div>
-                        <div class="message-text">${content.replace(/\n/g, '<br>')}</div>
+                        <div class="message-text markdown-content">${renderedContent}</div>
                         ${chartsHtml}
                     </div>
                 `;
                 
                 // 将图表ID和数据存储到消息元素中
-                messageDiv.chartData = chartIds;
+                if (chartIds.length > 0) {
+                    messageDiv.chartData = chartIds;
+                }
             }
             
             messagesContainer.appendChild(messageDiv);
@@ -1499,6 +1787,39 @@
             document.querySelector('.container').insertBefore(successDiv, document.querySelector('.import-section'));
             
             setTimeout(() => successDiv.remove(), 5000);
+        }
+
+        // 测试Markdown渲染功能
+        function testMarkdownInChat() {
+            console.log('开始测试Markdown渲染...');
+            
+            const testMarkdown = `# 测试标题
+
+这是一个**粗体文本**和*斜体文本*。
+
+## 表格测试
+| 时间 | 任务 | 负责人 |
+|------|------|--------|
+| 第1周 | 收集客户反馈 | 客户服务团队 |
+| 第2周 | 分析问题原因 | 质量管理部 |
+
+## 列表测试
+- 项目1
+- 项目2
+- 项目3
+
+> 这是一个引用块
+
+\`\`\`javascript
+function test() {
+    console.log("Hello World");
+}
+\`\`\``;
+            
+            console.log('测试Markdown内容:', testMarkdown);
+            
+            // 直接添加到聊天界面，不调用AI
+            addChatMessage(testMarkdown, 'ai');
         }
 
         // 窗口大小改变时重新调整图表
