@@ -1,0 +1,52 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: yunying-demo
+  
+  # 文件上传配置
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+  
+  # Thymeleaf配置
+  thymeleaf:
+    cache: false
+    prefix: classpath:/templates/
+    suffix: .html
+    encoding: UTF-8
+    mode: HTML
+  
+  # Spring AI配置
+  ai:
+    dashscope:
+      api-key: sk-03fff2ce022d48bf8239ef3c738a4feb
+      chat:
+        options:
+          model: qwen-turbo
+      rerank:
+        api-key: sk-03fff2ce022d48bf8239ef3c738a4feb
+
+# LangChain4j配置
+langchain4j:
+  community:
+    dash-scope:
+      chat-model:
+        api-key: sk-03fff2ce022d48bf8239ef3c738a4feb
+        model-name: qwen-turbo
+
+# 日志配置
+logging:
+  level:
+    com.demo.ai: DEBUG
+    org.springframework.web: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# 自定义配置
+app:
+  dashboard:
+    refresh-interval: 30000  # 30秒刷新一次
+    max-chat-history: 50     # 最大聊天历史记录数
