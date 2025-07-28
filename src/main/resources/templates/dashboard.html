@@ -37,7 +37,7 @@
             max-width: 60%;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 12px;
         }
 
         /* 右侧面板 */
@@ -49,7 +49,6 @@
             justify-content: flex-start;
             align-items: stretch;
         }
-
 
         .header h1 {
             font-size: 2.2em;
@@ -64,79 +63,79 @@
 
         .dashboard-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 12px;
+            margin-bottom: 12px;
         }
 
         .card {
             background: white;
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
         .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(0,0,0,0.15);
         }
 
         .card h3 {
             color: #667eea;
-            margin-bottom: 15px;
-            font-size: 1.2em;
+            margin-bottom: 12px;
+            font-size: 1.1em;
             border-bottom: 2px solid #f0f0f0;
-            padding-bottom: 10px;
+            padding-bottom: 8px;
         }
 
         .metric {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 12px;
-            padding: 8px;
+            margin-bottom: 10px;
+            padding: 6px;
             background: #f8f9fa;
-            border-radius: 8px;
+            border-radius: 6px;
         }
 
         .metric-label {
             font-weight: 500;
             color: #555;
-            font-size: 0.9em;
+            font-size: 0.85em;
         }
 
         .metric-value {
-            font-size: 1.1em;
+            font-size: 1em;
             font-weight: bold;
             color: #667eea;
         }
 
         .import-section {
             background: white;
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            margin-bottom: 12px;
         }
 
         .import-section h3 {
             color: #667eea;
-            margin-bottom: 15px;
-            font-size: 1.2em;
+            margin-bottom: 12px;
+            font-size: 1.1em;
         }
 
         .import-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 15px;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            margin-bottom: 12px;
         }
 
         .import-item {
             border: 2px dashed #e0e0e0;
-            border-radius: 10px;
-            padding: 15px;
+            border-radius: 8px;
+            padding: 12px;
             text-align: center;
             transition: border-color 0.3s ease;
         }
@@ -147,14 +146,14 @@
 
         .import-item h4 {
             color: #667eea;
-            margin-bottom: 8px;
-            font-size: 1em;
+            margin-bottom: 6px;
+            font-size: 0.9em;
         }
 
         .import-item p {
             color: #666;
-            font-size: 0.8em;
-            margin-bottom: 10px;
+            font-size: 0.75em;
+            margin-bottom: 8px;
         }
 
         .file-input {
@@ -165,10 +164,10 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            padding: 8px 15px;
-            border-radius: 15px;
+            padding: 6px 12px;
+            border-radius: 12px;
             cursor: pointer;
-            font-size: 12px;
+            font-size: 11px;
             transition: transform 0.3s ease;
         }
 
@@ -179,10 +178,10 @@
         .data-stats {
             display: flex;
             justify-content: space-around;
-            margin-top: 15px;
-            padding: 12px;
+            margin-top: 12px;
+            padding: 10px;
             background: #f8f9fa;
-            border-radius: 10px;
+            border-radius: 8px;
         }
 
         .stat-item {
@@ -190,19 +189,19 @@
         }
 
         .stat-number {
-            font-size: 1.3em;
+            font-size: 1.2em;
             font-weight: bold;
             color: #667eea;
         }
 
         .stat-label {
-            font-size: 0.8em;
+            font-size: 0.75em;
             color: #666;
         }
 
         .chart-container {
-            height: 250px;
-            margin-top: 15px;
+            height: 200px;
+            margin-top: 12px;
         }
 
         .loading {
@@ -542,7 +541,7 @@
         @media (max-width: 1200px) {
             .container {
                 flex-direction: column;
-                gap: 15px;
+                gap: 12px;
             }
             
             .left-panel, .right-panel {
@@ -558,14 +557,15 @@
             }
             
             .dashboard-grid {
-                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+                gap: 10px;
             }
         }
 
         @media (max-width: 768px) {
             .container {
-                padding: 10px;
-                gap: 10px;
+                padding: 8px;
+                gap: 8px;
             }
             
             .header h1 {
@@ -578,12 +578,12 @@
             
             .dashboard-grid {
                 grid-template-columns: 1fr;
-                gap: 10px;
+                gap: 8px;
             }
             
             .import-grid {
                 grid-template-columns: 1fr;
-                gap: 10px;
+                gap: 8px;
             }
             
             .ai-chat-card {
@@ -596,13 +596,13 @@
             
             .quick-questions {
                 flex-direction: column;
-                gap: 5px;
+                gap: 4px;
             }
             
             .quick-btn {
                 text-align: center;
-                padding: 8px 12px;
-                font-size: 12px;
+                padding: 6px 10px;
+                font-size: 11px;
             }
             
             .input-wrapper {
@@ -612,7 +612,7 @@
             
             .chat-input {
                 margin-right: 0;
-                margin-bottom: 8px;
+                margin-bottom: 6px;
             }
             
             .input-actions {
@@ -620,15 +620,15 @@
             }
             
             .card {
-                padding: 15px;
+                padding: 12px;
             }
             
             .import-section {
-                padding: 15px;
+                padding: 12px;
             }
             
             .import-item {
-                padding: 12px;
+                padding: 10px;
             }
         }
 
@@ -657,6 +657,18 @@
             
             .message-text {
                 font-size: 0.85em;
+            }
+            
+            .card {
+                padding: 10px;
+            }
+            
+            .import-section {
+                padding: 10px;
+            }
+            
+            .import-item {
+                padding: 8px;
             }
         }
 
@@ -1474,6 +1486,8 @@
         async function uploadFile(file, type) {
             if (!file) return;
             
+            console.log('开始上传文件:', type, file.name);
+            
             const formData = new FormData();
             formData.append('file', file);
             
@@ -1484,16 +1498,33 @@
                 });
                 
                 const result = await response.json();
+                console.log('上传结果:', result);
                 
                 if (result.success) {
-                    showSuccess(result.message);
-                    loadDataStats();
-                    loadDashboardData();
+                    try {
+                        showSuccess(result.message);
+                    } catch (e) {
+                        console.log('显示成功消息失败，但继续执行:', e);
+                    }
+                    console.log('开始刷新数据统计...');
+                    await loadDataStats();
+                    console.log('开始刷新看板数据...');
+                    await loadDashboardData();
+                    console.log('数据刷新完成');
                 } else {
-                    showError(result.message);
+                    try {
+                        showError(result.message);
+                    } catch (e) {
+                        console.error('显示错误消息失败:', e);
+                    }
                 }
             } catch (error) {
-                showError('上传失败：' + error.message);
+                console.error('上传失败:', error);
+                try {
+                    showError('上传失败：' + error.message);
+                } catch (e) {
+                    console.error('显示错误消息失败:', e);
+                }
             }
         }
 
@@ -1523,8 +1554,10 @@
         // 加载数据统计
         async function loadDataStats() {
             try {
+                console.log('正在获取数据统计...');
                 const response = await fetch('/api/excel/stats');
                 const result = await response.json();
+                console.log('数据统计结果:', result);
                 
                 if (result.success) {
                     const data = result.data;
@@ -1532,6 +1565,7 @@
                     document.getElementById('sales-count').textContent = data.sales;
                     document.getElementById('inventory-count').textContent = data.inventory;
                     document.getElementById('feedback-count').textContent = data.feedback;
+                    console.log('数据统计更新完成:', data);
                 }
             } catch (error) {
                 console.error('加载数据统计失败:', error);
@@ -1572,9 +1606,12 @@
 
         // 更新图表数据
         function updateCharts(data) {
+            console.log('开始更新图表数据:', data);
+            
             // 更新销售图表
             if (data.sales && Object.keys(data.sales).length > 0) {
                 const salesData = data.sales;
+                console.log('销售数据:', salesData);
                 
                 // 如果有销售数据，按产品分组显示
                 if (salesData.productStatistics && Object.keys(salesData.productStatistics).length > 0) {
@@ -1668,24 +1705,34 @@
         // 加载看板数据
         async function loadDashboardData() {
             try {
+                console.log('正在获取看板数据...');
                 const response = await fetch('/api/dashboard/realtime');
                 const data = await response.json();
+                console.log('看板数据结果:', data);
                 
                 if (data.success) {
+                    console.log('开始更新指标...');
                     updateMetrics(data);
-                    updateCharts(data); // 添加图表更新
+                    console.log('开始更新图表...');
+                    updateCharts(data);
+                    console.log('看板数据更新完成');
                 } else {
+                    console.error('加载数据失败：', data.error);
                     showError('加载数据失败：' + data.error);
                 }
             } catch (error) {
+                console.error('网络错误：', error);
                 showError('网络错误：' + error.message);
             }
         }
 
         // 更新指标显示
         function updateMetrics(data) {
+            console.log('开始更新指标显示，数据:', data);
+            
             // 生产指标
             const productionData = data.production;
+            console.log('生产数据:', productionData);
             document.getElementById('production-metrics').innerHTML = `
                 <div class="metric">
                     <span class="metric-label">总产量</span>
@@ -1774,7 +1821,17 @@
             const errorDiv = document.createElement('div');
             errorDiv.className = 'error';
             errorDiv.textContent = message;
-            document.querySelector('.container').insertBefore(errorDiv, document.querySelector('.import-section'));
+            errorDiv.style.position = 'fixed';
+            errorDiv.style.top = '20px';
+            errorDiv.style.left = '50%';
+            errorDiv.style.transform = 'translateX(-50%)';
+            errorDiv.style.zIndex = '1000';
+            errorDiv.style.padding = '10px 20px';
+            errorDiv.style.borderRadius = '5px';
+            errorDiv.style.backgroundColor = '#f8d7da';
+            errorDiv.style.color = '#721c24';
+            errorDiv.style.border = '1px solid #f5c6cb';
+            document.body.appendChild(errorDiv);
             
             setTimeout(() => errorDiv.remove(), 5000);
         }
@@ -1784,7 +1841,17 @@
             const successDiv = document.createElement('div');
             successDiv.className = 'success';
             successDiv.textContent = message;
-            document.querySelector('.container').insertBefore(successDiv, document.querySelector('.import-section'));
+            successDiv.style.position = 'fixed';
+            successDiv.style.top = '20px';
+            successDiv.style.left = '50%';
+            successDiv.style.transform = 'translateX(-50%)';
+            successDiv.style.zIndex = '1000';
+            successDiv.style.padding = '10px 20px';
+            successDiv.style.borderRadius = '5px';
+            successDiv.style.backgroundColor = '#d4edda';
+            successDiv.style.color = '#155724';
+            successDiv.style.border = '1px solid #c3e6cb';
+            document.body.appendChild(successDiv);
             
             setTimeout(() => successDiv.remove(), 5000);
         }
