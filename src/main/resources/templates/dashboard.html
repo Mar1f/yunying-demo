@@ -1,0 +1,1511 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能运营数据看板</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+
+        .card h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+        }
+
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .metric-label {
+            font-weight: 500;
+            color: #555;
+        }
+
+        .metric-value {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .import-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .import-section h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+        }
+
+        .import-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .import-item {
+            border: 2px dashed #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            transition: border-color 0.3s ease;
+        }
+
+        .import-item:hover {
+            border-color: #667eea;
+        }
+
+        .import-item h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .import-item p {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: transform 0.3s ease;
+        }
+
+        .upload-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .data-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .chart-container {
+            height: 300px;
+            margin-top: 20px;
+        }
+
+        .loading {
+            text-align: center;
+            color: #667eea;
+            font-style: italic;
+        }
+
+        .error {
+            color: #dc3545;
+            background: #f8d7da;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+
+        .success {
+            color: #155724;
+            background: #d4edda;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+
+        .clear-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+
+        .clear-btn:hover {
+            background: #c82333;
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px 15px 0 0;
+            padding: 15px 25px;
+            margin: -25px -25px 20px -25px;
+        }
+
+        .card-header h5 {
+            margin: 0;
+            font-size: 1.2em;
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: #555;
+            margin-bottom: 8px;
+        }
+
+        .form-control {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 12px 15px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: #667eea;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 25px;
+            padding: 12px 25px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: transform 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.05);
+        }
+
+        .alert {
+            border-radius: 10px;
+            border: none;
+            padding: 15px 20px;
+        }
+
+        .alert-info {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .text-danger {
+            color: #dc3545;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .ai-chat-card .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 25px;
+            margin: -25px -25px 20px -25px;
+        }
+
+        .ai-chat-card .card-title {
+            margin: 0;
+            font-size: 1.2em;
+        }
+
+        .ai-chat-card .ai-status {
+            display: flex;
+            align-items: center;
+        }
+
+        .ai-chat-card .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #4CAF50; /* Green for ready */
+            margin-right: 8px;
+        }
+
+        .ai-chat-card .status-text {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 600px; /* 增加高度从400px到600px */
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            overflow-y: auto;
+            background-color: #f9f9f9;
+            margin-bottom: 15px;
+        }
+
+        .chat-messages {
+            flex-grow: 1;
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        .message {
+            display: flex;
+            margin-bottom: 15px;
+            align-items: flex-start;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #667eea;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2em;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+
+        .message-content {
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            padding: 10px 15px;
+            max-width: 80%;
+            position: relative;
+            flex-grow: 1;
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+            color: #555;
+        }
+
+        .message-text {
+            font-size: 0.95em;
+            line-height: 1.5;
+            color: #333;
+        }
+
+        .message.user-message .message-content {
+            background-color: #667eea;
+            color: white;
+            margin-left: auto;
+        }
+
+        .message.user-message .message-header {
+            color: white;
+        }
+
+        .message.user-message .message-text {
+            color: white;
+        }
+
+        .chat-input-area {
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .input-wrapper {
+            display: flex;
+            align-items: flex-end;
+            margin-bottom: 10px;
+        }
+
+        .chat-input {
+            flex-grow: 1;
+            margin-right: 10px;
+            resize: none;
+            padding-right: 10px; /* Add some space for actions */
+        }
+
+        .input-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .char-count {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .send-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: transform 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .send-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .quick-questions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .quick-btn {
+            background: #f0f0f0;
+            border: 1px solid #e0e0e0;
+            border-radius: 20px;
+            padding: 8px 15px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .quick-btn:hover {
+            background-color: #e0e0e0;
+            border-color: #667eea;
+        }
+
+        .quick-label {
+            font-size: 0.9em;
+            color: #555;
+            margin-right: 10px;
+        }
+
+        /* 图表样式 */
+        .message-charts {
+            margin-top: 15px;
+            border-top: 1px solid #e0e0e0;
+            padding-top: 15px;
+        }
+
+        .message-charts .chart-container {
+            margin-bottom: 20px;
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            min-height: 350px; /* 确保图表容器有足够高度 */
+        }
+
+        .message-charts .chart-container h4 {
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 14px;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .message-charts .chart-container:last-child {
+            margin-bottom: 0;
+        }
+
+        /* 确保图表容器可见 */
+        .message-charts .chart-container div[id^="chart-"] {
+            min-height: 300px;
+            border: 1px solid #f0f0f0;
+            border-radius: 4px;
+            background: #fafafa;
+        }
+
+        /* 消息内容扩展样式 */
+        .message.ai-message .message-content {
+            max-width: 95%; /* 增加AI消息的最大宽度 */
+        }
+
+        .message.ai-message .message-text {
+            margin-bottom: 10px;
+        }
+
+        /* 消息动画效果 */
+        .message {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 加载动画 */
+        .loading-dots {
+            display: inline-block;
+        }
+
+        .loading-dots::after {
+            content: '';
+            animation: dots 1.5s steps(5, end) infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: ''; }
+            40% { content: '.'; }
+            60% { content: '..'; }
+            80%, 100% { content: '...'; }
+        }
+
+        /* 状态指示器动画 */
+        .status-dot {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .dashboard-grid, .import-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .chat-container {
+                height: 300px;
+            }
+            
+            .quick-questions {
+                flex-direction: column;
+            }
+            
+            .quick-btn {
+                text-align: center;
+            }
+            
+            .input-wrapper {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .chat-input {
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
+            
+            .input-actions {
+                justify-content: space-between;
+            }
+        }
+
+        /* 滚动条样式 */
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚗 智能运营数据看板</h1>
+            <p>数据驱动决策 · 智能分析预警 · 精准运营管理</p>
+        </div>
+
+        <!-- Excel数据导入区域 -->
+        <div class="import-section">
+            <h3>📊 Excel数据导入</h3>
+            <p style="margin-bottom: 20px; color: #666;">请按照模板格式上传Excel文件，系统将自动解析并展示数据</p>
+            
+            <div class="import-grid">
+                <div class="import-item">
+                    <h4>🏭 生产数据</h4>
+                    <p>产品名称、生产数量、缺陷数量、生产日期、生产线、单位成本、效率率</p>
+                    <input type="file" id="production-file" class="file-input" accept=".xlsx,.xls" />
+                    <button class="upload-btn" onclick="document.getElementById('production-file').click()">选择文件</button>
+                </div>
+                
+                <div class="import-item">
+                    <h4>💰 销售数据</h4>
+                    <p>产品名称、销售数量、销售金额、销售日期、客户ID、区域、销售渠道、利润率</p>
+                    <input type="file" id="sales-file" class="file-input" accept=".xlsx,.xls" />
+                    <button class="upload-btn" onclick="document.getElementById('sales-file').click()">选择文件</button>
+                </div>
+                
+                <div class="import-item">
+                    <h4>📦 库存数据</h4>
+                    <p>产品名称、当前库存、最低库存、最高库存、仓库位置、单位成本、供应商ID</p>
+                    <input type="file" id="inventory-file" class="file-input" accept=".xlsx,.xls" />
+                    <button class="upload-btn" onclick="document.getElementById('inventory-file').click()">选择文件</button>
+                </div>
+                
+                <div class="import-item">
+                    <h4>👥 客户反馈</h4>
+                    <p>客户ID、产品名称、反馈类型、反馈内容、满意度评分、反馈日期、状态、优先级</p>
+                    <input type="file" id="feedback-file" class="file-input" accept=".xlsx,.xls" />
+                    <button class="upload-btn" onclick="document.getElementById('feedback-file').click()">选择文件</button>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="clear-btn" onclick="clearAllData()">清除所有数据</button>
+            </div>
+            
+            <div class="data-stats" id="data-stats">
+                <div class="stat-item">
+                    <div class="stat-number" id="production-count">0</div>
+                    <div class="stat-label">生产数据</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="sales-count">0</div>
+                    <div class="stat-label">销售数据</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="inventory-count">0</div>
+                    <div class="stat-label">库存数据</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="feedback-count">0</div>
+                    <div class="stat-label">反馈数据</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 实时数据卡片 -->
+        <div class="dashboard-grid">
+            <div class="card">
+                <h3>📊 生产概况</h3>
+                <div id="production-metrics">
+                    <div class="loading">请先导入数据...</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>💰 销售概况</h3>
+                <div id="sales-metrics">
+                    <div class="loading">请先导入数据...</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>📦 库存概况</h3>
+                <div id="inventory-metrics">
+                    <div class="loading">请先导入数据...</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>👥 客户反馈</h3>
+                <div id="feedback-metrics">
+                    <div class="loading">请先导入数据...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI智能对话区域 -->
+        <div class="card ai-chat-card">
+            <div class="card-header">
+                <h5 class="card-title">
+                    <i class="fas fa-robot"></i> AI智能对话助手
+                </h5>
+                <div class="ai-status">
+                    <span class="status-dot"></span>
+                    <span class="status-text">就绪</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="chat-container">
+                    <div class="chat-messages" id="aiChatMessages">
+                        <div class="message ai-message">
+                            <div class="message-avatar">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div class="message-content">
+                                <div class="message-header">
+                                    <strong>AI助手</strong>
+                                    <span class="message-time" id="currentTime"></span>
+                                </div>
+                                <div class="message-text">
+                                    您好！我是您的智能运营分析助手。我可以帮您分析生产、销售、库存、客户反馈等各个维度的数据。请先导入Excel数据，然后告诉我您想了解什么？
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="chat-input-area">
+                        <div class="input-wrapper">
+                            <textarea 
+                                class="form-control chat-input" 
+                                id="aiQuestion" 
+                                rows="3" 
+                                placeholder="请输入您的问题，例如：分析一下生产效率和缺陷率情况？销售数据表现如何？库存是否存在风险？"
+                                maxlength="500"
+                            ></textarea>
+                            <div class="input-actions">
+                                <span class="char-count" id="charCount">0/500</span>
+                                <button type="button" class="btn btn-primary send-btn" onclick="askAI()" id="sendBtn">
+                                    <i class="fas fa-paper-plane"></i>
+                                    <span>发送</span>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="quick-questions">
+                            <span class="quick-label">快速问题：</span>
+                            <button class="quick-btn" onclick="askQuickQuestion('分析一下生产效率和缺陷率情况，并生成相关图表')">生产效率分析</button>
+                            <button class="quick-btn" onclick="askQuickQuestion('销售数据表现如何，请生成销售趋势图表')">销售表现</button>
+                            <button class="quick-btn" onclick="askQuickQuestion('库存是否存在风险，请生成库存分布图表')">库存风险</button>
+                            <button class="quick-btn" onclick="askQuickQuestion('客户满意度如何，请生成满意度分析图表')">客户满意度</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 图表展示区域 -->
+        <div class="dashboard-grid">
+            <div class="card">
+                <h3>📈 销售趋势</h3>
+                <div id="sales-chart" class="chart-container"></div>
+            </div>
+            
+            <div class="card">
+                <h3>🏭 生产效率</h3>
+                <div id="production-chart" class="chart-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let salesChart, productionChart;
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDataStats();
+            initializeCharts();
+            setupFileUploads();
+            loadDashboardData(); // 添加这行来加载初始数据
+            
+            // 设置当前时间
+            updateCurrentTime();
+            setInterval(updateCurrentTime, 1000);
+            
+            // 回车键发送AI问题
+            document.getElementById('aiQuestion').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    askAI();
+                }
+            });
+            
+            // 字符计数
+            document.getElementById('aiQuestion').addEventListener('input', function(e) {
+                const count = e.target.value.length;
+                document.getElementById('charCount').textContent = count + '/500';
+                
+                // 更新发送按钮状态
+                const sendBtn = document.getElementById('sendBtn');
+                if (count > 0) {
+                    sendBtn.disabled = false;
+                    sendBtn.style.opacity = '1';
+                } else {
+                    sendBtn.disabled = true;
+                    sendBtn.style.opacity = '0.6';
+                }
+            });
+        });
+
+        // 更新当前时间
+        function updateCurrentTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('zh-CN', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            document.getElementById('currentTime').textContent = timeString;
+        }
+
+        // 快速问题功能
+        function askQuickQuestion(question) {
+            document.getElementById('aiQuestion').value = question;
+            document.getElementById('charCount').textContent = question.length + '/500';
+            document.getElementById('sendBtn').disabled = false;
+            document.getElementById('sendBtn').style.opacity = '1';
+            askAI();
+        }
+
+        // 优化的AI对话函数
+        async function askAI() {
+            const questionInput = document.getElementById('aiQuestion');
+            const question = questionInput.value.trim();
+            
+            if (!question) {
+                showError('请输入您的问题');
+                return;
+            }
+
+            // 添加用户消息到聊天界面
+            addChatMessage(question, 'user');
+            
+            // 清空输入框
+            questionInput.value = '';
+            document.getElementById('charCount').textContent = '0/500';
+            document.getElementById('sendBtn').disabled = true;
+            document.getElementById('sendBtn').style.opacity = '0.6';
+
+            // 更新AI状态
+            updateAIStatus('分析中...', '#FF9800');
+
+            try {
+                const response = await fetch('/api/dashboard/analyze-with-charts', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question: question })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // 添加AI回复到聊天界面（包含图表）
+                    addChatMessageWithCharts(data.analysis, data.charts, 'ai');
+                    updateAIStatus('就绪', '#4CAF50');
+                } else {
+                    addChatMessage('抱歉，分析过程中出现错误：' + (data.message || data.error), 'ai');
+                    updateAIStatus('错误', '#F44336');
+                }
+            } catch (error) {
+                addChatMessage('网络错误，请稍后重试', 'ai');
+                updateAIStatus('错误', '#F44336');
+                console.error('AI分析错误:', error);
+            }
+        }
+
+        // 添加聊天消息
+        function addChatMessage(content, type) {
+            const messagesContainer = document.getElementById('aiChatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}-message`;
+            
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('zh-CN', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            
+            if (type === 'user') {
+                messageDiv.innerHTML = `
+                    <div class="message-content">
+                        <div class="message-header">
+                            <strong>您</strong>
+                            <span class="message-time">${timeString}</span>
+                        </div>
+                        <div class="message-text">${content}</div>
+                    </div>
+                    <div class="message-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                `;
+            } else {
+                messageDiv.innerHTML = `
+                    <div class="message-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="message-content">
+                        <div class="message-header">
+                            <strong>AI助手</strong>
+                            <span class="message-time">${timeString}</span>
+                        </div>
+                        <div class="message-text">${content.replace(/\n/g, '<br>')}</div>
+                    </div>
+                `;
+            }
+            
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // 添加带图表的聊天消息
+        function addChatMessageWithCharts(content, charts, type) {
+            const messagesContainer = document.getElementById('aiChatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}-message`;
+            
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('zh-CN', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            
+            if (type === 'user') {
+                messageDiv.innerHTML = `
+                    <div class="message-content">
+                        <div class="message-header">
+                            <strong>您</strong>
+                            <span class="message-time">${timeString}</span>
+                        </div>
+                        <div class="message-text">${content}</div>
+                    </div>
+                    <div class="message-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                `;
+            } else {
+                let chartsHtml = '';
+                const chartIds = [];
+                
+                if (charts && Object.keys(charts).length > 0) {
+                    chartsHtml = '<div class="message-charts">';
+                    Object.entries(charts).forEach(([chartKey, chartData], index) => {
+                        const uniqueId = `chart-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+                        chartIds.push({ id: uniqueId, data: chartData });
+                        chartsHtml += `
+                            <div class="chart-container">
+                                <h4>${chartData.title}</h4>
+                                <div id="${uniqueId}" style="height: 300px; width: 100%;"></div>
+                            </div>
+                        `;
+                    });
+                    chartsHtml += '</div>';
+                }
+                
+                messageDiv.innerHTML = `
+                    <div class="message-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="message-content">
+                        <div class="message-header">
+                            <strong>AI助手</strong>
+                            <span class="message-time">${timeString}</span>
+                        </div>
+                        <div class="message-text">${content.replace(/\n/g, '<br>')}</div>
+                        ${chartsHtml}
+                    </div>
+                `;
+                
+                // 将图表ID和数据存储到消息元素中
+                messageDiv.chartData = chartIds;
+            }
+            
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            
+            // 渲染图表 - 使用存储的图表数据
+            if (type === 'ai' && messageDiv.chartData && messageDiv.chartData.length > 0) {
+                setTimeout(() => {
+                    messageDiv.chartData.forEach(({ id, data }) => {
+                        renderChart(id, data);
+                    });
+                }, 300); // 增加延迟确保DOM元素已创建
+            }
+        }
+
+        // 渲染图表
+        function renderChart(chartId, chartData) {
+            console.log('Attempting to render chart:', chartId, chartData);
+            
+            const chartElement = document.getElementById(chartId);
+            if (!chartElement) {
+                console.error('Chart element not found:', chartId);
+                return;
+            }
+            
+            console.log('Chart element found:', chartElement);
+            
+            try {
+                const chart = echarts.init(chartElement);
+                console.log('ECharts instance created for:', chartId);
+                
+                let option = {
+                    title: {
+                        text: chartData.title,
+                        left: 'center',
+                        textStyle: {
+                            fontSize: 14,
+                            fontWeight: 'normal'
+                        }
+                    },
+                    tooltip: {
+                        trigger: chartData.type === 'pie' ? 'item' : 'axis',
+                        formatter: function(params) {
+                            if (chartData.type === 'pie') {
+                                return `${params.name}: ${params.value} (${params.percent}%)`;
+                            } else {
+                                return `${params.name}: ${params.value}`;
+                            }
+                        }
+                    },
+                    grid: {
+                        left: '3%',
+                        right: '4%',
+                        bottom: '3%',
+                        containLabel: true
+                    },
+                    color: ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe']
+                };
+                
+                if (chartData.type === 'bar') {
+                    option.xAxis = {
+                        type: 'category',
+                        data: chartData.categories,
+                        axisLabel: {
+                            rotate: 45,
+                            fontSize: 12
+                        }
+                    };
+                    option.yAxis = {
+                        type: 'value',
+                        name: chartData.yAxisTitle || '',
+                        nameTextStyle: {
+                            fontSize: 12
+                        }
+                    };
+                    option.series = [{
+                        data: chartData.data,
+                        type: 'bar',
+                        itemStyle: {
+                            color: '#667eea'
+                        },
+                        label: {
+                            show: true,
+                            position: 'top',
+                            fontSize: 12
+                        }
+                    }];
+                } else if (chartData.type === 'line') {
+                    option.xAxis = {
+                        type: 'category',
+                        data: chartData.categories,
+                        axisLabel: {
+                            fontSize: 12
+                        }
+                    };
+                    option.yAxis = {
+                        type: 'value',
+                        name: chartData.yAxisTitle || '',
+                        nameTextStyle: {
+                            fontSize: 12
+                        }
+                    };
+                    option.series = [{
+                        data: chartData.data,
+                        type: 'line',
+                        smooth: true,
+                        itemStyle: {
+                            color: '#667eea'
+                        },
+                        lineStyle: {
+                            width: 3
+                        },
+                        label: {
+                            show: true,
+                            fontSize: 12
+                        }
+                    }];
+                } else if (chartData.type === 'pie') {
+                    option.series = [{
+                        type: 'pie',
+                        radius: '50%',
+                        center: ['50%', '60%'],
+                        data: chartData.categories.map((category, index) => ({
+                            name: category,
+                            value: chartData.data[index]
+                        })),
+                        emphasis: {
+                            itemStyle: {
+                                shadowBlur: 10,
+                                shadowOffsetX: 0,
+                                shadowColor: 'rgba(0, 0, 0, 0.5)'
+                            }
+                        },
+                        label: {
+                            show: true,
+                            fontSize: 12,
+                            formatter: '{b}: {c} ({d}%)'
+                        }
+                    }];
+                }
+                
+                console.log('Setting chart option for:', chartId, option);
+                chart.setOption(option);
+                
+                // 响应式调整
+                window.addEventListener('resize', () => {
+                    chart.resize();
+                });
+                
+                console.log('Chart rendered successfully:', chartId);
+            } catch (error) {
+                console.error('Error rendering chart:', chartId, error);
+            }
+        }
+
+        // 更新AI状态
+        function updateAIStatus(status, color) {
+            const statusDot = document.querySelector('.status-dot');
+            const statusText = document.querySelector('.status-text');
+            
+            statusDot.style.backgroundColor = color;
+            statusText.textContent = status;
+        }
+
+        // 设置文件上传监听
+        function setupFileUploads() {
+            document.getElementById('production-file').addEventListener('change', function(e) {
+                uploadFile(e.target.files[0], 'production');
+            });
+            
+            document.getElementById('sales-file').addEventListener('change', function(e) {
+                uploadFile(e.target.files[0], 'sales');
+            });
+            
+            document.getElementById('inventory-file').addEventListener('change', function(e) {
+                uploadFile(e.target.files[0], 'inventory');
+            });
+            
+            document.getElementById('feedback-file').addEventListener('change', function(e) {
+                uploadFile(e.target.files[0], 'feedback');
+            });
+        }
+
+        // 上传文件
+        async function uploadFile(file, type) {
+            if (!file) return;
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                const response = await fetch(`/api/excel/import/${type}`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showSuccess(result.message);
+                    loadDataStats();
+                    loadDashboardData();
+                } else {
+                    showError(result.message);
+                }
+            } catch (error) {
+                showError('上传失败：' + error.message);
+            }
+        }
+
+        // 清除所有数据
+        async function clearAllData() {
+            if (!confirm('确定要清除所有数据吗？')) return;
+            
+            try {
+                const response = await fetch('/api/excel/clear', {
+                    method: 'DELETE'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showSuccess(result.message);
+                    loadDataStats();
+                    loadDashboardData();
+                } else {
+                    showError(result.message);
+                }
+            } catch (error) {
+                showError('清除失败：' + error.message);
+            }
+        }
+
+        // 加载数据统计
+        async function loadDataStats() {
+            try {
+                const response = await fetch('/api/excel/stats');
+                const result = await response.json();
+                
+                if (result.success) {
+                    const data = result.data;
+                    document.getElementById('production-count').textContent = data.production;
+                    document.getElementById('sales-count').textContent = data.sales;
+                    document.getElementById('inventory-count').textContent = data.inventory;
+                    document.getElementById('feedback-count').textContent = data.feedback;
+                }
+            } catch (error) {
+                console.error('加载数据统计失败:', error);
+            }
+        }
+
+        // 初始化图表
+        function initializeCharts() {
+            // 销售趋势图表
+            salesChart = echarts.init(document.getElementById('sales-chart'));
+            salesChart.setOption({
+                title: { text: '销售数据概览', textStyle: { fontSize: 14 } },
+                tooltip: { trigger: 'axis' },
+                xAxis: { type: 'category', data: [] },
+                yAxis: { type: 'value', name: '销售额' },
+                series: [{
+                    data: [],
+                    type: 'bar',
+                    itemStyle: { color: '#667eea' },
+                    label: { show: true, position: 'top' }
+                }]
+            });
+
+            // 生产效率图表
+            productionChart = echarts.init(document.getElementById('production-chart'));
+            productionChart.setOption({
+                title: { text: '生产数据概览', textStyle: { fontSize: 14 } },
+                tooltip: { trigger: 'item' },
+                series: [{
+                    type: 'pie',
+                    radius: '60%',
+                    data: [],
+                    emphasis: { itemStyle: { shadowBlur: 10, shadowOffsetX: 0, shadowColor: 'rgba(0, 0, 0, 0.5)' } },
+                    label: { show: true, formatter: '{b}: {c} ({d}%)' }
+                }]
+            });
+        }
+
+        // 更新图表数据
+        function updateCharts(data) {
+            // 更新销售图表
+            if (data.sales && Object.keys(data.sales).length > 0) {
+                const salesData = data.sales;
+                
+                // 如果有销售数据，按产品分组显示
+                if (salesData.productStatistics && Object.keys(salesData.productStatistics).length > 0) {
+                    const productStats = salesData.productStatistics;
+                    const categories = Object.keys(productStats);
+                    const salesAmounts = categories.map(product => productStats[product].totalSales || 0);
+                    
+                    salesChart.setOption({
+                        title: { text: '各产品销售额对比' },
+                        xAxis: { data: categories },
+                        yAxis: { name: '销售额 (万元)' },
+                        series: [{
+                            data: salesAmounts,
+                            type: 'bar'
+                        }]
+                    });
+                } else {
+                    // 如果没有详细数据，显示基础统计
+                    salesChart.setOption({
+                        title: { text: '销售数据概览' },
+                        xAxis: { data: ['总销售额', '销售数量', '平均利润率'] },
+                        yAxis: { name: '数值' },
+                        series: [{
+                            data: [
+                                salesData.totalSales || 0,
+                                salesData.totalQuantity || 0,
+                                (salesData.averageProfitMargin || 0) * 100
+                            ],
+                            type: 'bar'
+                        }]
+                    });
+                }
+            } else {
+                // 没有销售数据时显示空状态
+                salesChart.setOption({
+                    title: { text: '销售数据概览' },
+                    xAxis: { data: [] },
+                    yAxis: { name: '销售额' },
+                    series: [{
+                        data: [],
+                        type: 'bar'
+                    }]
+                });
+            }
+
+            // 更新生产图表
+            if (data.production && Object.keys(data.production).length > 0) {
+                const productionData = data.production;
+                let productionChartData = [];
+                
+                // 如果有生产数据，按产品分组显示
+                if (productionData.productStatistics && Object.keys(productionData.productStatistics).length > 0) {
+                    const productStats = productionData.productStatistics;
+                    productionChartData = Object.entries(productStats).map(([product, stats]) => ({
+                        name: product,
+                        value: stats.totalProduction || 0
+                    }));
+                    
+                    productionChart.setOption({
+                        title: { text: '各产品生产量分布' },
+                        series: [{
+                            data: productionChartData
+                        }]
+                    });
+                } else {
+                    // 如果没有详细数据，显示基础统计
+                    productionChartData = [
+                        { name: '总产量', value: productionData.totalProduction || 0 },
+                        { name: '缺陷数量', value: productionData.totalDefects || 0 },
+                        { name: '平均效率', value: (productionData.averageEfficiency || 0) * 100 }
+                    ];
+                    
+                    productionChart.setOption({
+                        title: { text: '生产数据概览' },
+                        series: [{
+                            data: productionChartData
+                        }]
+                    });
+                }
+            } else {
+                // 没有生产数据时显示空状态
+                productionChart.setOption({
+                    title: { text: '生产数据概览' },
+                    series: [{
+                        data: []
+                    }]
+                });
+            }
+        }
+
+        // 加载看板数据
+        async function loadDashboardData() {
+            try {
+                const response = await fetch('/api/dashboard/realtime');
+                const data = await response.json();
+                
+                if (data.success) {
+                    updateMetrics(data);
+                    updateCharts(data); // 添加图表更新
+                } else {
+                    showError('加载数据失败：' + data.error);
+                }
+            } catch (error) {
+                showError('网络错误：' + error.message);
+            }
+        }
+
+        // 更新指标显示
+        function updateMetrics(data) {
+            // 生产指标
+            const productionData = data.production;
+            document.getElementById('production-metrics').innerHTML = `
+                <div class="metric">
+                    <span class="metric-label">总产量</span>
+                    <span class="metric-value">${productionData.totalProduction || 0}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">缺陷数量</span>
+                    <span class="metric-value">${productionData.totalDefects || 0}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">平均效率</span>
+                    <span class="metric-value">${((productionData.averageEfficiency || 0) * 100).toFixed(1)}%</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">缺陷率</span>
+                    <span class="metric-value">${(productionData.defectRate || 0).toFixed(2)}%</span>
+                </div>
+            `;
+
+            // 销售指标
+            const salesData = data.sales;
+            document.getElementById('sales-metrics').innerHTML = `
+                <div class="metric">
+                    <span class="metric-label">总销售额</span>
+                    <span class="metric-value">¥${(salesData.totalSales || 0).toLocaleString()}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">销售数量</span>
+                    <span class="metric-value">${salesData.totalQuantity || 0}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">平均利润率</span>
+                    <span class="metric-value">${((salesData.averageProfitMargin || 0) * 100).toFixed(1)}%</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">销售区域</span>
+                    <span class="metric-value">${(salesData.regions || []).length}个</span>
+                </div>
+            `;
+
+            // 库存指标
+            const inventoryData = data.inventory;
+            document.getElementById('inventory-metrics').innerHTML = `
+                <div class="metric">
+                    <span class="metric-label">总库存</span>
+                    <span class="metric-value">${inventoryData.totalStock || 0}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">低库存商品</span>
+                    <span class="metric-value">${inventoryData.lowStockItems || 0}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">超库存商品</span>
+                    <span class="metric-value">${inventoryData.overStockItems || 0}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">仓库数量</span>
+                    <span class="metric-value">${(inventoryData.warehouses || []).length}个</span>
+                </div>
+            `;
+
+            // 客户反馈指标
+            const feedbackData = data.feedback;
+            document.getElementById('feedback-metrics').innerHTML = `
+                <div class="metric">
+                    <span class="metric-label">总反馈数</span>
+                    <span class="metric-value">${feedbackData.totalFeedback || 0}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">平均满意度</span>
+                    <span class="metric-value">${(feedbackData.averageSatisfaction || 0).toFixed(1)}/5</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">投诉数量</span>
+                    <span class="metric-value">${feedbackData.complaints || 0}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">待处理问题</span>
+                    <span class="metric-value">${feedbackData.pendingIssues || 0}</span>
+                </div>
+            `;
+        }
+
+        // 显示错误信息
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error';
+            errorDiv.textContent = message;
+            document.querySelector('.container').insertBefore(errorDiv, document.querySelector('.import-section'));
+            
+            setTimeout(() => errorDiv.remove(), 5000);
+        }
+
+        // 显示成功信息
+        function showSuccess(message) {
+            const successDiv = document.createElement('div');
+            successDiv.className = 'success';
+            successDiv.textContent = message;
+            document.querySelector('.container').insertBefore(successDiv, document.querySelector('.import-section'));
+            
+            setTimeout(() => successDiv.remove(), 5000);
+        }
+
+        // 窗口大小改变时重新调整图表
+        window.addEventListener('resize', function() {
+            if (salesChart) salesChart.resize();
+            if (productionChart) productionChart.resize();
+        });
+    </script>
+</body>
+</html> 
