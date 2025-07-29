@@ -13,7 +13,6 @@ import java.util.List;
 
 /**
  * AI代码助手
- * 基于通义千问的智能对话服务
  */
 @Service
 @Slf4j
