@@ -1,24 +1,23 @@
 package com.demo.ai;
 
 import dev.langchain4j.community.model.dashscope.QwenChatModel;
-import dev.langchain4j.data.message.AiMessage;
-import dev.langchain4j.data.message.SystemMessage;
-import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.memory.ChatMemory;
+import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.ChatModel;
-import dev.langchain4j.model.chat.response.ChatResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import java.util.List;
 
-/**
- * AI助手
- */
+import java.util.concurrent.ConcurrentHashMap;
+
 @Service
 @Slf4j
 public class AiHelper {
     @Autowired
     private AiDashScope properties;
+    
+    // 存储每个用户的聊天记忆
+    private final ConcurrentHashMap<String, ChatMemory> userChatMemories = new ConcurrentHashMap<>();
 
     public ChatModel getQwenModel() {
         return QwenChatModel.builder()
@@ -26,33 +25,35 @@ public class AiHelper {
                 .modelName(properties.getModelName())
                 .enableSearch(true)
                 .temperature(0.7f)
-                .maxTokens(2048)
-                .stops(List.of("Hello"))
+                .maxTokens(4096)
                 .build();
     }
-
-    private static final String SYSTEM_MESSAGE = 
-        "You are a programming assistant helping users with programming learning and job interview questions. " +
-        "Your task is to analyze provided code snippets and explain them in simple, easy-to-understand language. " +
-        "Break down the code's functionality, purpose, and key components. Use analogies, examples, and plain terms " +
-        "to make explanations accessible to people with little coding knowledge. Avoid technical jargon unless " +
-        "absolutely necessary, and provide clear explanations for any terms used. The goal is to help readers " +
-        "understand what the code does and how it works at a high level.";
-
-    public String chat(String message) {
-        SystemMessage systemMessage = SystemMessage.from(SYSTEM_MESSAGE);
-        UserMessage userMessage = UserMessage.from(message);
-        ChatResponse chatResponse = getQwenModel().chat(systemMessage, userMessage);
-        AiMessage aiMessage = chatResponse.aiMessage();
-        System.out.println("AI Output: " + aiMessage.toString());
-        return aiMessage.text();
+    
+    /**
+     * 获取用户的聊天记忆
+     * @param userId 用户ID
+     * @return ChatMemory实例
+     */
+    public ChatMemory getUserChatMemory(String userId) {
+        return userChatMemories.computeIfAbsent(userId, 
+            key -> MessageWindowChatMemory.withMaxMessages(10));
     }
-
-    public String chatWithMessage(UserMessage userMessage) {
-        ChatResponse chatResponse = getQwenModel().chat(userMessage);
-        AiMessage aiMessage = chatResponse.aiMessage();
-        System.out.println("AI Output: " + aiMessage.toString());
-        return aiMessage.text();
+    
+    /**
+     * 清除用户的聊天记忆
+     * @param userId 用户ID
+     */
+    public void clearUserChatMemory(String userId) {
+        userChatMemories.remove(userId);
+        System.out.println("已清除用户 {} 的聊天记忆" + userId);;
+    }
+    
+    /**
+     * 获取所有活跃用户数量
+     * @return 活跃用户数量
+     */
+    public int getActiveUserCount() {
+        return userChatMemories.size();
     }
 }
 

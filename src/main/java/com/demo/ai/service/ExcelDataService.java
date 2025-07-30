@@ -26,7 +26,7 @@ public class ExcelDataService {
 
     private static final Logger log = LoggerFactory.getLogger(ExcelDataService.class);
 
-    // 内存存储数据
+    // 存数据
     private final Map<String, List<ProductionData>> productionDataMap = new ConcurrentHashMap<>();
     private final Map<String, List<SalesData>> salesDataMap = new ConcurrentHashMap<>();
     private final Map<String, List<InventoryData>> inventoryDataMap = new ConcurrentHashMap<>();

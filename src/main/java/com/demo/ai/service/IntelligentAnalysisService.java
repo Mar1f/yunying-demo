@@ -12,10 +12,15 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
+import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.data.message.SystemMessage;
+import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.memory.ChatMemory;
+import dev.langchain4j.model.chat.response.ChatResponse;
 
 /**
  * Intelligent Analysis Service
- * Integrates AI conversation and data analysis functionality
+ * Integrates AI conversation and data analysis functionality with memory support
  */
 @Service
 @Slf4j
@@ -32,10 +37,15 @@ public class IntelligentAnalysisService {
     private static final String SYSTEM_PROMPT = 
         "You are a professional automotive industry operations data analyst. You need to analyze production, sales, inventory, customer feedback and other multi-dimensional data based on user questions, and provide professional analysis reports and suggestions. Please explain the meaning behind the data in simple and easy-to-understand language, and provide specific improvement suggestions.\n\n" +
         "You can analyze the following data dimensions:\n" +
-        "1. Production data: production efficiency, defect rate, cost control, production line performance\n" +
-        "2. Sales data: sales revenue, profit margin, regional distribution, sales channels, customer analysis\n" +
-        "3. Inventory data: inventory levels, turnover rate, stockout risk, warehouse management\n" +
-        "4. Customer feedback: satisfaction, complaint handling, product improvement suggestions, service quality\n\n" +
+        "1. Production data: production efficiency, defect rate, cost control, production line performance, product-specific analysis\n" +
+        "2. Sales data: sales revenue, profit margin, regional distribution, sales channels, customer analysis, product performance comparison\n" +
+        "3. Inventory data: inventory levels, turnover rate, stockout risk, warehouse management, product-specific inventory analysis\n" +
+        "4. Customer feedback: satisfaction, complaint handling, product improvement suggestions, service quality, product-specific feedback analysis\n\n" +
+        "Key analysis points:\n" +
+        "- Always consider product-specific performance when analyzing data\n" +
+        "- Compare performance across different products to identify strengths and weaknesses\n" +
+        "- Provide actionable recommendations based on product-specific insights\n" +
+        "- Consider the relationship between production, sales, inventory, and customer feedback for each product\n\n" +
         "Please provide data-driven analysis reports based on users' specific questions. " +
         "If no relevant data is available, please inform the user and suggest what data should be uploaded.";
 
@@ -50,11 +60,11 @@ public class IntelligentAnalysisService {
      * 如果没有相关数据可用，请告知用户并建议应该上传哪些数据。
      */
     /**
-     * Intelligent conversation analysis
+     * Intelligent conversation analysis with memory
      */
-    public String intelligentAnalysis(String userQuestion) {
+    public String intelligentAnalysis(String userQuestion, String userId) {
         try {
-            log.info("开始AI分析，用户问题: {}", userQuestion);
+            log.info("开始AI分析，用户ID: {}, 用户问题: {}", userId, userQuestion);
             
             // Get relevant data
             Map<String, Object> dataContext = getDataContext(userQuestion);
@@ -74,8 +84,8 @@ public class IntelligentAnalysisService {
             
             log.info("构建分析提示，数据上下文包含 {} 个维度", dataContext.size());
             
-            // Call AI for analysis
-            String analysisResult = aiHelper.chat(analysisPrompt);
+            // Call AI for analysis with memory
+            String analysisResult = callAiModelWithMemory(analysisPrompt, userId);
             
             log.info("AI分析完成");
             return analysisResult;
@@ -86,11 +96,11 @@ public class IntelligentAnalysisService {
     }
 
     /**
-     * Intelligent conversation analysis with chart data
+     * Intelligent conversation analysis with chart data and memory
      */
-    public Map<String, Object> intelligentAnalysisWithCharts(String userQuestion) {
+    public Map<String, Object> intelligentAnalysisWithCharts(String userQuestion, String userId) {
         try {
-            log.info("开始AI分析，用户问题: {}", userQuestion);
+            log.info("开始AI分析，用户ID: {}, 用户问题: {}", userId, userQuestion);
             
             // Get relevant data
             Map<String, Object> dataContext = getDataContext(userQuestion);
@@ -116,8 +126,8 @@ public class IntelligentAnalysisService {
             
             log.info("构建分析提示，数据上下文包含 {} 个维度", dataContext.size());
             
-            // Call AI for analysis
-            String analysisResult = aiHelper.chat(analysisPrompt);
+            // Call AI for analysis with memory
+            String analysisResult = callAiModelWithMemory(analysisPrompt, userId);
             
             log.info("AI分析完成");
             
@@ -135,6 +145,26 @@ public class IntelligentAnalysisService {
             response.put("message", "抱歉，分析过程中发生错误。请检查数据格式是否正确，或稍后重试。");
             return response;
         }
+    }
+
+    /**
+     * 清除用户聊天记忆
+     */
+    public void clearUserMemory(String userId) {
+        aiHelper.clearUserChatMemory(userId);
+        log.info("已清除用户 {} 的聊天记忆", userId);
+    }
+
+    /**
+     * 获取用户聊天记忆信息
+     */
+    public Map<String, Object> getUserMemoryInfo(String userId) {
+        ChatMemory chatMemory = aiHelper.getUserChatMemory(userId);
+        Map<String, Object> info = new HashMap<>();
+        info.put("userId", userId);
+        info.put("messageCount", chatMemory.messages().size());
+        info.put("activeUserCount", aiHelper.getActiveUserCount());
+        return info;
     }
 
     /**
@@ -160,13 +190,13 @@ public class IntelligentAnalysisService {
         
         if (lowerQuestion.contains("生产") || lowerQuestion.contains("效率") || lowerQuestion.contains("缺陷") || 
             lowerQuestion.contains("production") || lowerQuestion.contains("efficiency") || lowerQuestion.contains("defect")) {
-            context.put("productionData", getProductionSummary(oneMonthAgo, now));
+            context.put("productionData", getProductionSummary(allProductionData));
             context.put("productionDataDetail", getProductionDataDetail(allProductionData));
         }
         
         if (lowerQuestion.contains("销售") || lowerQuestion.contains("收入") || lowerQuestion.contains("利润") || 
             lowerQuestion.contains("sales") || lowerQuestion.contains("revenue") || lowerQuestion.contains("profit")) {
-            context.put("salesData", getSalesSummary(oneMonthAgo, now));
+            context.put("salesData", getSalesSummary(allSalesData));
             context.put("salesDataDetail", getSalesDataDetail(allSalesData));
         }
         
@@ -178,16 +208,16 @@ public class IntelligentAnalysisService {
         
         if (lowerQuestion.contains("客户") || lowerQuestion.contains("反馈") || lowerQuestion.contains("满意") || 
             lowerQuestion.contains("customer") || lowerQuestion.contains("feedback") || lowerQuestion.contains("satisfaction")) {
-            context.put("feedbackData", getFeedbackSummary(oneMonthAgo, now));
+            context.put("feedbackData", getFeedbackSummary(allFeedbackData));
             context.put("feedbackDataDetail", getFeedbackDataDetail(allFeedbackData));
         }
         
         // If no specific keywords found, include all available data
         if (context.isEmpty()) {
-            if (!allProductionData.isEmpty()) context.put("productionData", getProductionSummary(oneMonthAgo, now));
-            if (!allSalesData.isEmpty()) context.put("salesData", getSalesSummary(oneMonthAgo, now));
+            if (!allProductionData.isEmpty()) context.put("productionData", getProductionSummary(allProductionData));
+            if (!allSalesData.isEmpty()) context.put("salesData", getSalesSummary(allSalesData));
             if (!allInventoryData.isEmpty()) context.put("inventoryData", getInventorySummary());
-            if (!allFeedbackData.isEmpty()) context.put("feedbackData", getFeedbackSummary(oneMonthAgo, now));
+            if (!allFeedbackData.isEmpty()) context.put("feedbackData", getFeedbackSummary(allFeedbackData));
         }
 
         return context;
@@ -220,10 +250,8 @@ public class IntelligentAnalysisService {
     /**
      * Get production data summary
      */
-    private Map<String, Object> getProductionSummary(LocalDateTime startDate, LocalDateTime endDate) {
+    private Map<String, Object> getProductionSummary(List<ProductionData> productionData) {
         Map<String, Object> summary = new HashMap<>();
-        
-        List<ProductionData> productionData = excelDataService.getProductionDataByDateRange(startDate, endDate);
         
         if (!productionData.isEmpty()) {
             summary.put("totalProduction", productionData.stream().mapToInt(ProductionData::getProductionQuantity).sum());
@@ -231,6 +259,25 @@ public class IntelligentAnalysisService {
             summary.put("averageEfficiency", productionData.stream().mapToDouble(ProductionData::getEfficiencyRate).average().orElse(0.0));
             summary.put("defectRate", calculateDefectRate(productionData));
             summary.put("productionLines", productionData.stream().map(ProductionData::getProductionLine).distinct().collect(Collectors.toList()));
+            
+            // 添加产品维度统计
+            Map<String, List<ProductionData>> productGroups = productionData.stream()
+                    .collect(Collectors.groupingBy(ProductionData::getProductName));
+            
+            Map<String, Object> productSummary = new HashMap<>();
+            productGroups.forEach((product, data) -> {
+                Map<String, Object> stats = new HashMap<>();
+                stats.put("totalProduction", data.stream().mapToInt(ProductionData::getProductionQuantity).sum());
+                stats.put("totalDefects", data.stream().mapToInt(ProductionData::getDefectQuantity).sum());
+                stats.put("averageEfficiency", data.stream().mapToDouble(ProductionData::getEfficiencyRate).average().orElse(0.0));
+                stats.put("defectRate", calculateDefectRate(data));
+                stats.put("productionCount", data.size());
+                productSummary.put(product, stats);
+            });
+            
+            summary.put("productSummary", productSummary);
+            summary.put("productCount", productGroups.size());
+            summary.put("products", new ArrayList<>(productGroups.keySet()));
         }
         
         return summary;
@@ -268,10 +315,8 @@ public class IntelligentAnalysisService {
     /**
      * Get sales data summary
      */
-    private Map<String, Object> getSalesSummary(LocalDateTime startDate, LocalDateTime endDate) {
+    private Map<String, Object> getSalesSummary(List<SalesData> salesData) {
         Map<String, Object> summary = new HashMap<>();
-        
-        List<SalesData> salesData = excelDataService.getSalesDataByDateRange(startDate, endDate);
         
         if (!salesData.isEmpty()) {
             summary.put("totalSales", salesData.stream().mapToDouble(SalesData::getSalesAmount).sum());
@@ -279,6 +324,24 @@ public class IntelligentAnalysisService {
             summary.put("averageProfitMargin", salesData.stream().mapToDouble(SalesData::getProfitMargin).average().orElse(0.0));
             summary.put("regions", salesData.stream().map(SalesData::getRegion).distinct().collect(Collectors.toList()));
             summary.put("salesChannels", salesData.stream().map(SalesData::getSalesChannel).distinct().collect(Collectors.toList()));
+            
+            // 添加产品维度统计
+            Map<String, List<SalesData>> productGroups = salesData.stream()
+                    .collect(Collectors.groupingBy(SalesData::getProductName));
+            
+            Map<String, Object> productSummary = new HashMap<>();
+            productGroups.forEach((product, data) -> {
+                Map<String, Object> stats = new HashMap<>();
+                stats.put("totalSales", data.stream().mapToDouble(SalesData::getSalesAmount).sum());
+                stats.put("totalQuantity", data.stream().mapToInt(SalesData::getSalesQuantity).sum());
+                stats.put("averageProfitMargin", data.stream().mapToDouble(SalesData::getProfitMargin).average().orElse(0.0));
+                stats.put("salesCount", data.size());
+                productSummary.put(product, stats);
+            });
+            
+            summary.put("productSummary", productSummary);
+            summary.put("productCount", productGroups.size());
+            summary.put("products", new ArrayList<>(productGroups.keySet()));
         }
         
         return summary;
@@ -326,6 +389,25 @@ public class IntelligentAnalysisService {
             summary.put("lowStockItems", inventoryData.stream().filter(i -> i.getCurrentStock() < i.getMinStockLevel()).count());
             summary.put("overStockItems", inventoryData.stream().filter(i -> i.getCurrentStock() > i.getMaxStockLevel()).count());
             summary.put("warehouses", inventoryData.stream().map(InventoryData::getWarehouseLocation).distinct().collect(Collectors.toList()));
+            
+            // 添加产品维度统计
+            Map<String, List<InventoryData>> productGroups = inventoryData.stream()
+                    .collect(Collectors.groupingBy(InventoryData::getProductName));
+            
+            Map<String, Object> productSummary = new HashMap<>();
+            productGroups.forEach((product, data) -> {
+                Map<String, Object> stats = new HashMap<>();
+                stats.put("totalStock", data.stream().mapToInt(InventoryData::getCurrentStock).sum());
+                stats.put("averageStock", data.stream().mapToInt(InventoryData::getCurrentStock).average().orElse(0.0));
+                stats.put("warehouseCount", data.stream().map(InventoryData::getWarehouseLocation).distinct().count());
+                stats.put("lowStockCount", data.stream().filter(i -> i.getCurrentStock() < i.getMinStockLevel()).count());
+                stats.put("overStockCount", data.stream().filter(i -> i.getCurrentStock() > i.getMaxStockLevel()).count());
+                productSummary.put(product, stats);
+            });
+            
+            summary.put("productSummary", productSummary);
+            summary.put("productCount", productGroups.size());
+            summary.put("products", new ArrayList<>(productGroups.keySet()));
         }
         
         return summary;
@@ -361,10 +443,8 @@ public class IntelligentAnalysisService {
     /**
      * Get customer feedback summary
      */
-    private Map<String, Object> getFeedbackSummary(LocalDateTime startDate, LocalDateTime endDate) {
+    private Map<String, Object> getFeedbackSummary(List<CustomerFeedback> feedbackData) {
         Map<String, Object> summary = new HashMap<>();
-        
-        List<CustomerFeedback> feedbackData = excelDataService.getFeedbackDataByDateRange(startDate, endDate);
         
         if (!feedbackData.isEmpty()) {
             summary.put("totalFeedback", feedbackData.size());
@@ -372,6 +452,25 @@ public class IntelligentAnalysisService {
             summary.put("complaints", feedbackData.stream().filter(f -> "投诉".equals(f.getFeedbackType())).count());
             summary.put("suggestions", feedbackData.stream().filter(f -> "建议".equals(f.getFeedbackType())).count());
             summary.put("pendingIssues", feedbackData.stream().filter(f -> "待处理".equals(f.getStatus())).count());
+            
+            // 添加产品维度统计
+            Map<String, List<CustomerFeedback>> productGroups = feedbackData.stream()
+                    .collect(Collectors.groupingBy(CustomerFeedback::getProductName));
+            
+            Map<String, Object> productSummary = new HashMap<>();
+            productGroups.forEach((product, data) -> {
+                Map<String, Object> stats = new HashMap<>();
+                stats.put("totalFeedback", data.size());
+                stats.put("averageSatisfaction", data.stream().mapToInt(CustomerFeedback::getSatisfactionScore).average().orElse(0.0));
+                stats.put("complaints", data.stream().filter(f -> "投诉".equals(f.getFeedbackType())).count());
+                stats.put("suggestions", data.stream().filter(f -> "建议".equals(f.getFeedbackType())).count());
+                stats.put("pendingIssues", data.stream().filter(f -> "待处理".equals(f.getStatus())).count());
+                productSummary.put(product, stats);
+            });
+            
+            summary.put("productSummary", productSummary);
+            summary.put("productCount", productGroups.size());
+            summary.put("products", new ArrayList<>(productGroups.keySet()));
         }
         
         return summary;
@@ -890,5 +989,32 @@ public class IntelligentAnalysisService {
         chartData.put("data", data);
         
         return chartData;
+    }
+
+    private String callAiModel(String prompt) {
+        SystemMessage systemMessage = SystemMessage.from(SYSTEM_PROMPT);
+        UserMessage userMessage = UserMessage.from(prompt);
+        ChatResponse chatResponse = aiHelper.getQwenModel().chat(systemMessage, userMessage);
+        AiMessage aiMessage = chatResponse.aiMessage();
+        return aiMessage.text();
+    }
+
+    private String callAiModelWithMemory(String prompt, String userId) {
+        ChatMemory chatMemory = aiHelper.getUserChatMemory(userId);
+        
+        // 添加用户消息到记忆
+        chatMemory.add(UserMessage.from(prompt));
+        
+        // 获取所有历史消息
+        List<dev.langchain4j.data.message.ChatMessage> messages = chatMemory.messages();
+        
+        // 调用AI模型
+        ChatResponse chatResponse = aiHelper.getQwenModel().chat(messages);
+        AiMessage aiMessage = chatResponse.aiMessage();
+        
+        // 添加AI回复到记忆
+        chatMemory.add(aiMessage);
+        
+        return aiMessage.text();
     }
 } 

@@ -301,6 +301,33 @@
             color: rgba(255,255,255,0.9);
         }
 
+        .ai-chat-card .clear-memory-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.3);
+            background-color: rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-left: 8px;
+            transition: all 0.2s ease;
+            font-size: 0.8em;
+        }
+
+        .ai-chat-card .clear-memory-btn:hover {
+            background-color: rgba(255,255,255,0.2);
+            border-color: rgba(255,255,255,0.5);
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .ai-chat-card .clear-memory-btn:active {
+            transform: scale(0.95);
+        }
+
         .chat-container {
             display: flex;
             flex-direction: column;
@@ -940,6 +967,60 @@
         .thinking-steps li:nth-child(4)::before {
             animation-delay: 1.5s;
         }
+
+        /* Toast消息样式 */
+        .toast-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding: 12px 16px;
+            z-index: 9999;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            border-left: 4px solid #007bff;
+            min-width: 250px;
+        }
+
+        .toast-message.show {
+            transform: translateX(0);
+        }
+
+        .toast-message.toast-success {
+            border-left-color: #28a745;
+        }
+
+        .toast-message.toast-error {
+            border-left-color: #dc3545;
+        }
+
+        .toast-message.toast-info {
+            border-left-color: #17a2b8;
+        }
+
+        .toast-content {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toast-content i {
+            font-size: 1.1em;
+        }
+
+        .toast-success .toast-content i {
+            color: #28a745;
+        }
+
+        .toast-error .toast-content i {
+            color: #dc3545;
+        }
+
+        .toast-info .toast-content i {
+            color: #17a2b8;
+        }
     </style>
 </head>
 <body>
@@ -1061,6 +1142,9 @@
                     <div class="ai-status">
                         <span class="status-dot"></span>
                         <span class="status-text">就绪</span>
+                        <button type="button" class="clear-memory-btn" onclick="clearChatMemory()" title="清除聊天记忆">
+                            🧹
+                        </button>
                     </div>
                 </div>
                 <div class="chat-container">
@@ -1195,6 +1279,222 @@
             }, 100);
         }
 
+        // 生成用户ID
+        function generateUserId() {
+            let userId = localStorage.getItem('ai_user_id');
+            if (!userId) {
+                userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('ai_user_id', userId);
+            }
+            return userId;
+        }
+
+        // 获取当前用户ID
+        const currentUserId = generateUserId();
+
+        // 智能分析函数
+        async function performIntelligentAnalysis(question, includeCharts = false) {
+            const analysisInput = document.getElementById('analysisInput');
+            const analysisButton = document.getElementById('analysisButton');
+            const analysisResult = document.getElementById('analysisResult');
+            
+            if (!question || question.trim() === '') {
+                alert('请输入分析问题');
+                return;
+            }
+            
+            // 显示加载状态
+            analysisButton.disabled = true;
+            analysisButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 分析中...';
+            analysisResult.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin"></i> 正在分析数据，请稍候...</div>';
+            
+            try {
+                const endpoint = includeCharts ? '/api/dashboard/analyze-with-charts' : '/api/dashboard/analyze';
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        question: question,
+                        userId: currentUserId
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    if (includeCharts && result.charts) {
+                        // 显示带图表的分析结果
+                        displayAnalysisWithCharts(result.analysis, result.charts);
+                    } else {
+                        // 显示纯文本分析结果
+                        analysisResult.innerHTML = `
+                            <div class="analysis-content">
+                                <h5><i class="fas fa-chart-line"></i> 分析结果</h5>
+                                <div class="analysis-text">${result.analysis.replace(/\n/g, '<br>')}</div>
+                            </div>
+                        `;
+                    }
+                } else {
+                    analysisResult.innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle"></i> 分析失败: ${result.error || '未知错误'}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('分析请求失败:', error);
+                analysisResult.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle"></i> 网络错误，请检查连接后重试
+                    </div>
+                `;
+            } finally {
+                // 恢复按钮状态
+                analysisButton.disabled = false;
+                analysisButton.innerHTML = '<i class="fas fa-robot"></i> 智能分析';
+            }
+        }
+
+        // 清除聊天记忆
+        async function clearChatMemory() {
+            // 添加确认对话框
+            if (!confirm('确定要清除聊天记忆吗？这将删除所有对话历史。')) {
+                return;
+            }
+            
+            try {
+                // 显示清除中状态
+                const clearBtn = document.querySelector('.clear-memory-btn');
+                const originalContent = clearBtn.innerHTML;
+                clearBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                clearBtn.disabled = true;
+                
+                const response = await fetch('/api/dashboard/clear-memory', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        userId: currentUserId
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // 清空聊天界面
+                    const messagesContainer = document.getElementById('aiChatMessages');
+                    if (messagesContainer) {
+                        messagesContainer.innerHTML = `
+                            <div class="message ai-message">
+                                <div class="message-avatar">
+                                    🤖
+                                </div>
+                                <div class="message-content">
+                                    <div class="message-header">
+                                        <strong>AI助手</strong>
+                                        <span class="message-time">${new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}</span>
+                                    </div>
+                                    <div class="message-text markdown-content">
+                                        <p>✅ 聊天记忆已清除！我可以开始新的对话了。</p>
+                                        <p>请告诉我您想了解什么？</p>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    // 显示成功提示
+                    showToast('聊天记忆已清除', 'success');
+                } else {
+                    showToast('清除记忆失败: ' + (result.error || '未知错误'), 'error');
+                }
+            } catch (error) {
+                console.error('清除记忆失败:', error);
+                showToast('网络错误，请稍后重试', 'error');
+            } finally {
+                // 恢复按钮状态
+                const clearBtn = document.querySelector('.clear-memory-btn');
+                clearBtn.innerHTML = '🧹';
+                clearBtn.disabled = false;
+            }
+        }
+
+        // 获取记忆信息
+        async function getMemoryInfo() {
+            try {
+                const response = await fetch(`/api/dashboard/memory-info/${currentUserId}`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    return result;
+                } else {
+                    console.error('获取记忆信息失败:', result.error);
+                }
+            } catch (error) {
+                console.error('获取记忆信息失败:', error);
+            }
+        }
+
+        // 发送聊天消息（带记忆功能）
+        async function sendChatMessage() {
+            const chatInput = document.getElementById('chatInput');
+            const message = chatInput.value.trim();
+            
+            if (!message) return;
+            
+            // 添加用户消息到界面
+            addChatMessage(message, 'user');
+            chatInput.value = '';
+            
+            // 显示AI正在输入状态
+            const loadingMessageId = 'loading-' + Date.now();
+            addChatMessage('<i class="fas fa-spinner fa-spin"></i> AI正在思考中...', 'ai');
+            
+            try {
+                const response = await fetch('/api/dashboard/analyze-with-charts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        question: message,
+                        userId: currentUserId
+                    })
+                });
+                
+                const result = await response.json();
+                
+                // 移除加载消息
+                const loadingMessage = document.querySelector('.ai-message:last-child');
+                if (loadingMessage) {
+                    loadingMessage.remove();
+                }
+                
+                if (result.success) {
+                    if (result.charts && Object.keys(result.charts).length > 0) {
+                        addChatMessageWithCharts(result.analysis, result.charts, 'ai');
+                    } else {
+                        addChatMessage(result.analysis, 'ai');
+                    }
+                } else {
+                    addChatMessage('抱歉，分析过程中出现错误: ' + (result.error || '未知错误'), 'ai');
+                }
+            } catch (error) {
+                console.error('发送消息失败:', error);
+                
+                // 移除加载消息
+                const loadingMessage = document.querySelector('.ai-message:last-child');
+                if (loadingMessage) {
+                    loadingMessage.remove();
+                }
+                
+                addChatMessage('网络错误，请检查连接后重试', 'ai');
+            }
+        }
+
         // 优化的AI对话函数
         async function askAI() {
             const questionInput = document.getElementById('aiQuestion');
@@ -1224,7 +1524,7 @@
                 const response = await fetch('/api/dashboard/analyze-with-charts', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ question: question })
+                    body: JSON.stringify({ question: question, userId: currentUserId })
                 });
 
                 const data = await response.json();
@@ -1312,8 +1612,6 @@
                     return content.replace(/\n/g, '<br>');
                 }
                 
-                console.log('开始渲染Markdown，内容长度:', content.length);
-                
                 // 使用简单的配置
                 marked.setOptions({
                     breaks: true,
@@ -1322,14 +1620,12 @@
                 
                 // 渲染Markdown
                 const htmlContent = marked.parse(content);
-                console.log('Markdown渲染完成，HTML长度:', htmlContent.length);
                 
                 // 简单的HTML清理，不使用DOMPurify
                 const cleanHtml = htmlContent
                     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // 移除script标签
                     .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, ''); // 移除iframe标签
                 
-                console.log('HTML清理完成');
                 return cleanHtml;
                 
             } catch (error) {
@@ -1427,19 +1723,14 @@
 
         // 渲染图表
         function renderChart(chartId, chartData) {
-            console.log('Attempting to render chart:', chartId, chartData);
-            
             const chartElement = document.getElementById(chartId);
             if (!chartElement) {
                 console.error('Chart element not found:', chartId);
                 return;
             }
             
-            console.log('Chart element found:', chartElement);
-            
             try {
                 const chart = echarts.init(chartElement);
-                console.log('ECharts instance created for:', chartId);
                 
                 let option = {
                     title: {
@@ -1559,7 +1850,6 @@
                     }];
                 }
                 
-                console.log('Setting chart option for:', chartId, option);
                 chart.setOption(option);
                 
                 // 响应式调整
@@ -1567,7 +1857,6 @@
                     chart.resize();
                 });
                 
-                console.log('Chart rendered successfully:', chartId);
             } catch (error) {
                 console.error('Error rendering chart:', chartId, error);
             }
@@ -1605,8 +1894,6 @@
         async function uploadFile(file, type) {
             if (!file) return;
             
-            console.log('开始上传文件:', type, file.name);
-            
             const formData = new FormData();
             formData.append('file', file);
             
@@ -1617,19 +1904,15 @@
                 });
                 
                 const result = await response.json();
-                console.log('上传结果:', result);
                 
                 if (result.success) {
                     try {
                         showSuccess(result.message);
                     } catch (e) {
-                        console.log('显示成功消息失败，但继续执行:', e);
+                        // 显示成功消息失败，但继续执行
                     }
-                    console.log('开始刷新数据统计...');
                     await loadDataStats();
-                    console.log('开始刷新看板数据...');
                     await loadDashboardData();
-                    console.log('数据刷新完成');
                 } else {
                     try {
                         showError(result.message);
@@ -1670,13 +1953,50 @@
             }
         }
 
+        // 调试数据存储状态
+        async function debugDataStorage() {
+            try {
+                const response = await fetch('/api/excel/debug');
+                const result = await response.json();
+                
+                if (result.success) {
+                    const debugInfo = result.debugInfo;
+                    
+                    // 显示调试信息
+                    let debugMessage = '📊 数据存储调试信息:\n\n';
+                    debugMessage += `生产数据: ${debugInfo.productionDataCount} 条\n`;
+                    debugMessage += `销售数据: ${debugInfo.salesDataCount} 条\n`;
+                    debugMessage += `库存数据: ${debugInfo.inventoryDataCount} 条\n`;
+                    debugMessage += `反馈数据: ${debugInfo.feedbackDataCount} 条\n\n`;
+                    
+                    if (debugInfo.productionSample) {
+                        debugMessage += `生产数据示例: ${JSON.stringify(debugInfo.productionSample, null, 2)}\n\n`;
+                    }
+                    if (debugInfo.salesSample) {
+                        debugMessage += `销售数据示例: ${JSON.stringify(debugInfo.salesSample, null, 2)}\n\n`;
+                    }
+                    if (debugInfo.inventorySample) {
+                        debugMessage += `库存数据示例: ${JSON.stringify(debugInfo.inventorySample, null, 2)}\n\n`;
+                    }
+                    if (debugInfo.feedbackSample) {
+                        debugMessage += `反馈数据示例: ${JSON.stringify(debugInfo.feedbackSample, null, 2)}\n\n`;
+                    }
+                    
+                    // 显示简化的用户提示
+                    showToast(`数据状态: 生产${debugInfo.productionDataCount}条, 销售${debugInfo.salesDataCount}条, 库存${debugInfo.inventoryDataCount}条, 反馈${debugInfo.feedbackDataCount}条`, 'info');
+                } else {
+                    showError('获取调试信息失败: ' + result.error);
+                }
+            } catch (error) {
+                showError('调试失败：' + error.message);
+            }
+        }
+
         // 加载数据统计
         async function loadDataStats() {
             try {
-                console.log('正在获取数据统计...');
                 const response = await fetch('/api/excel/stats');
                 const result = await response.json();
-                console.log('数据统计结果:', result);
                 
                 if (result.success) {
                     const data = result.data;
@@ -1684,7 +2004,6 @@
                     document.getElementById('sales-count').textContent = data.sales;
                     document.getElementById('inventory-count').textContent = data.inventory;
                     document.getElementById('feedback-count').textContent = data.feedback;
-                    console.log('数据统计更新完成:', data);
                 }
             } catch (error) {
                 console.error('加载数据统计失败:', error);
@@ -1725,12 +2044,9 @@
 
         // 更新图表数据
         function updateCharts(data) {
-            console.log('开始更新图表数据:', data);
-            
             // 更新销售图表
             if (data.sales && Object.keys(data.sales).length > 0) {
                 const salesData = data.sales;
-                console.log('销售数据:', salesData);
                 
                 // 如果有销售数据，按产品分组显示
                 if (salesData.productStatistics && Object.keys(salesData.productStatistics).length > 0) {
@@ -1824,115 +2140,108 @@
         // 加载看板数据
         async function loadDashboardData() {
             try {
-                console.log('正在获取看板数据...');
                 const response = await fetch('/api/dashboard/realtime');
                 const data = await response.json();
-                console.log('看板数据结果:', data);
                 
                 if (data.success) {
-                    console.log('开始更新指标...');
                     updateMetrics(data);
-                    console.log('开始更新图表...');
                     updateCharts(data);
-                    console.log('看板数据更新完成');
-                } else {
-                    console.error('加载数据失败：', data.error);
-                    showError('加载数据失败：' + data.error);
                 }
             } catch (error) {
-                console.error('网络错误：', error);
-                showError('网络错误：' + error.message);
+                console.error('加载看板数据失败:', error);
             }
         }
 
         // 更新指标显示
         function updateMetrics(data) {
-            console.log('开始更新指标显示，数据:', data);
-            
-            // 生产指标
             const productionData = data.production;
-            console.log('生产数据:', productionData);
-            document.getElementById('production-metrics').innerHTML = `
-                <div class="metric">
-                    <span class="metric-label">总产量</span>
-                    <span class="metric-value">${productionData.totalProduction || 0}</span>
-                </div>
-                <div class="metric">
-                    <span class="metric-label">缺陷数量</span>
-                    <span class="metric-value">${productionData.totalDefects || 0}</span>
-                </div>
-                <div class="metric">
-                    <span class="metric-label">平均效率</span>
-                    <span class="metric-value">${((productionData.averageEfficiency || 0) * 100).toFixed(2)}%</span>
-                </div>
-                <div class="metric">
-                    <span class="metric-label">缺陷率</span>
-                    <span class="metric-value">${(productionData.defectRate || 0).toFixed(2)}%</span>
-                </div>
-            `;
-
-            // 销售指标
             const salesData = data.sales;
-            document.getElementById('sales-metrics').innerHTML = `
-                <div class="metric">
-                    <span class="metric-label">总销售额</span>
-                    <span class="metric-value">¥${(salesData.totalSales || 0).toFixed(2)}</span>
-                </div>
-                <div class="metric">
-                    <span class="metric-label">销售数量</span>
-                    <span class="metric-value">${salesData.totalQuantity || 0}</span>
-                </div>
-                <div class="metric">
-                    <span class="metric-label">平均利润率</span>
-                    <span class="metric-value">${((salesData.averageProfitMargin || 0) * 100).toFixed(2)}%</span>
-                </div>
-                <div class="metric">
-                    <span class="metric-label">销售区域</span>
-                    <span class="metric-value">${(salesData.regions || []).length}个</span>
-                </div>
-            `;
-
-            // 库存指标
             const inventoryData = data.inventory;
-            document.getElementById('inventory-metrics').innerHTML = `
-                <div class="metric">
-                    <span class="metric-label">总库存</span>
-                    <span class="metric-value">${inventoryData.totalStock || 0}</span>
-                </div>
-                <div class="metric">
-                    <span class="metric-label">低库存商品</span>
-                    <span class="metric-value">${inventoryData.lowStockItems || 0}</span>
-                </div>
-                <div class="metric">
-                    <span class="metric-label">超库存商品</span>
-                    <span class="metric-value">${inventoryData.overStockItems || 0}</span>
-                </div>
-                <div class="metric">
-                    <span class="metric-label">仓库数量</span>
-                    <span class="metric-value">${(inventoryData.warehouses || []).length}个</span>
-                </div>
-            `;
-
-            // 客户反馈指标
             const feedbackData = data.feedback;
-            document.getElementById('feedback-metrics').innerHTML = `
-                <div class="metric">
-                    <span class="metric-label">总反馈数</span>
-                    <span class="metric-value">${feedbackData.totalFeedback || 0}</span>
-                </div>
-                <div class="metric">
-                    <span class="metric-label">平均满意度</span>
-                    <span class="metric-value">${(feedbackData.averageSatisfaction || 0).toFixed(2)}/5</span>
-                </div>
-                <div class="metric">
-                    <span class="metric-label">投诉数量</span>
-                    <span class="metric-value">${feedbackData.complaints || 0}</span>
-                </div>
-                <div class="metric">
-                    <span class="metric-label">待处理问题</span>
-                    <span class="metric-value">${feedbackData.pendingIssues || 0}</span>
-                </div>
-            `;
+            
+            // 更新生产指标
+            if (productionData) {
+                document.getElementById('production-metrics').innerHTML = `
+                    <div class="metric-item">
+                        <div class="metric-value">${productionData.totalProduction || 0}</div>
+                        <div class="metric-label">总产量</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">${(productionData.averageEfficiency || 0).toFixed(1)}%</div>
+                        <div class="metric-label">平均效率</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">${(productionData.defectRate || 0).toFixed(2)}%</div>
+                        <div class="metric-label">缺陷率</div>
+                    </div>
+                `;
+            }
+
+            // 更新销售指标
+            if (salesData) {
+                document.getElementById('sales-metrics').innerHTML = `
+                    <div class="metric-item">
+                        <div class="metric-value">${salesData.totalSales || 0}</div>
+                        <div class="metric-label">总销售额</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">${salesData.totalQuantity || 0}</div>
+                        <div class="metric-label">销售数量</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">${(salesData.averageProfitMargin || 0).toFixed(2)}%</div>
+                        <div class="metric-label">平均利润率</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">${(salesData.regions || []).length}</div>
+                        <div class="metric-label">销售区域</div>
+                    </div>
+                `;
+            }
+
+            // 更新库存指标
+            if (inventoryData) {
+                document.getElementById('inventory-metrics').innerHTML = `
+                    <div class="metric-item">
+                        <div class="metric-value">${inventoryData.totalStock || 0}</div>
+                        <div class="metric-label">总库存</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">${inventoryData.lowStockItems || 0}</div>
+                        <div class="metric-label">低库存商品</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">${inventoryData.overStockItems || 0}</div>
+                        <div class="metric-label">超库存商品</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">${(inventoryData.warehouses || []).length}</div>
+                        <div class="metric-label">仓库数量</div>
+                    </div>
+                `;
+            }
+
+            // 更新客户反馈指标
+            if (feedbackData) {
+                document.getElementById('feedback-metrics').innerHTML = `
+                    <div class="metric-item">
+                        <div class="metric-value">${feedbackData.totalFeedback || 0}</div>
+                        <div class="metric-label">总反馈数</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">${(feedbackData.averageSatisfaction || 0).toFixed(2)}/5</div>
+                        <div class="metric-label">平均满意度</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">${feedbackData.complaints || 0}</div>
+                        <div class="metric-label">投诉数量</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-value">${feedbackData.pendingIssues || 0}</div>
+                        <div class="metric-label">待处理问题</div>
+                    </div>
+                `;
+            }
         }
 
         // 显示错误信息
@@ -2029,6 +2338,31 @@
             if (salesChart) salesChart.resize();
             if (productionChart) productionChart.resize();
         });
+
+        // 显示提示消息
+        function showToast(message, type = 'info') {
+            // 创建toast元素
+            const toast = document.createElement('div');
+            toast.className = `toast-message toast-${type}`;
+            toast.innerHTML = `
+                <div class="toast-content">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            // 添加到页面
+            document.body.appendChild(toast);
+            
+            // 显示动画
+            setTimeout(() => toast.classList.add('show'), 100);
+            
+            // 自动隐藏
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => document.body.removeChild(toast), 300);
+            }, 3000);
+        }
     </script>
 </body>
 </html> 

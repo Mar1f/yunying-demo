@@ -18,16 +18,6 @@ spring:
     suffix: .html
     encoding: UTF-8
     mode: HTML
-  
-  # Spring AI配置
-  ai:
-    dashscope:
-      api-key: sk-03fff2ce022d48bf8239ef3c738a4feb
-      chat:
-        options:
-          model: qwen-turbo
-      rerank:
-        api-key: sk-03fff2ce022d48bf8239ef3c738a4feb
 
 # LangChain4j配置
 langchain4j:

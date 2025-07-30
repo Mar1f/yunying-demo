@@ -31,11 +31,13 @@ public class IntelligentDashboardController {
     public ResponseEntity<Map<String, Object>> intelligentAnalysis(@RequestBody Map<String, String> request) {
         try {
             String question = request.get("question");
+            String userId = request.getOrDefault("userId", "default_user");
+            
             if (question == null || question.trim().isEmpty()) {
                 return ResponseEntity.badRequest().body(Map.of("error", "问题不能为空"));
             }
 
-            String analysisResult = intelligentAnalysisService.intelligentAnalysis(question);
+            String analysisResult = intelligentAnalysisService.intelligentAnalysis(question, userId);
             
             Map<String, Object> response = Map.of(
                 "success", true,
@@ -61,11 +63,13 @@ public class IntelligentDashboardController {
     public ResponseEntity<Map<String, Object>> intelligentAnalysisWithCharts(@RequestBody Map<String, String> request) {
         try {
             String question = request.get("question");
+            String userId = request.getOrDefault("userId", "default_user");
+            
             if (question == null || question.trim().isEmpty()) {
                 return ResponseEntity.badRequest().body(Map.of("error", "问题不能为空"));
             }
 
-            Map<String, Object> analysisResult = intelligentAnalysisService.intelligentAnalysisWithCharts(question);
+            Map<String, Object> analysisResult = intelligentAnalysisService.intelligentAnalysisWithCharts(question, userId);
             analysisResult.put("timestamp", System.currentTimeMillis());
             
             return ResponseEntity.ok(analysisResult);
@@ -74,6 +78,54 @@ public class IntelligentDashboardController {
             return ResponseEntity.internalServerError().body(Map.of(
                 "success", false,
                 "error", "分析过程中出现错误",
+                "timestamp", System.currentTimeMillis()
+            ));
+        }
+    }
+
+    /**
+     * 清除用户聊天记忆
+     */
+    @PostMapping("/clear-memory")
+    public ResponseEntity<Map<String, Object>> clearUserMemory(@RequestBody Map<String, String> request) {
+        try {
+            String userId = request.getOrDefault("userId", "default_user");
+            intelligentAnalysisService.clearUserMemory(userId);
+            
+            Map<String, Object> response = Map.of(
+                "success", true,
+                "message", "聊天记忆已清除",
+                "userId", userId,
+                "timestamp", System.currentTimeMillis()
+            );
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("清除聊天记忆失败", e);
+            return ResponseEntity.internalServerError().body(Map.of(
+                "success", false,
+                "error", "清除记忆过程中出现错误",
+                "timestamp", System.currentTimeMillis()
+            ));
+        }
+    }
+
+    /**
+     * 获取用户聊天记忆信息
+     */
+    @GetMapping("/memory-info/{userId}")
+    public ResponseEntity<Map<String, Object>> getUserMemoryInfo(@PathVariable String userId) {
+        try {
+            Map<String, Object> memoryInfo = intelligentAnalysisService.getUserMemoryInfo(userId);
+            memoryInfo.put("success", true);
+            memoryInfo.put("timestamp", System.currentTimeMillis());
+            
+            return ResponseEntity.ok(memoryInfo);
+        } catch (Exception e) {
+            log.error("获取记忆信息失败", e);
+            return ResponseEntity.internalServerError().body(Map.of(
+                "success", false,
+                "error", "获取记忆信息过程中出现错误",
                 "timestamp", System.currentTimeMillis()
             ));
         }

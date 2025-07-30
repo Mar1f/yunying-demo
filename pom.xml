@@ -35,6 +35,7 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
         <!-- Spring AI Alibaba -->
+        <!--
         <dependency>
             <groupId>com.alibaba.cloud.ai</groupId>
             <artifactId>spring-ai-alibaba-starter</artifactId>
@@ -46,6 +47,7 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        -->
 
         <!-- Excel处理 -->
         <dependency>
