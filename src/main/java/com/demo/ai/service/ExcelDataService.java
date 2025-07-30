@@ -71,7 +71,12 @@ public class ExcelDataService {
                         data.setProductionDate(parseDateTime(getCellValueAsString(row.getCell(3))));
                         data.setProductionLine(getCellValueAsString(row.getCell(4)));
                         data.setCostPerUnit(getCellValueAsDouble(row.getCell(5)));
-                        data.setEfficiencyRate(getCellValueAsDouble(row.getCell(6)));
+                        
+                        // 特别调试效率率
+                        Double efficiencyRate = getCellValueAsDouble(row.getCell(6));
+                        data.setEfficiencyRate(efficiencyRate);
+                        log.info("第 {} 行效率率读取: 原始值={}, 处理后={}", i + 1, 
+                                row.getCell(6) != null ? row.getCell(6).toString() : "null", efficiencyRate);
                         
                         dataList.add(data);
                         log.debug("成功解析第 {} 行数据: {}", i + 1, data.getProductName());
@@ -379,17 +384,30 @@ public class ExcelDataService {
     }
 
     private Double getCellValueAsDouble(Cell cell) {
-        if (cell == null) return 0.0;
+        if (cell == null) {
+            log.info("单元格为空，返回0.0");
+            return 0.0;
+        }
+        
+        log.info("处理单元格: 类型={}, 值={}", cell.getCellType(), cell.toString());
+        
         switch (cell.getCellType()) {
             case NUMERIC: 
-                return cell.getNumericCellValue();
+                double numericValue = cell.getNumericCellValue();
+                log.info("数值类型单元格: {}", numericValue);
+                return numericValue;
             case STRING: 
                 try {
-                    return Double.parseDouble(cell.getStringCellValue());
+                    String stringValue = cell.getStringCellValue();
+                    double parsedValue = Double.parseDouble(stringValue);
+                    log.info("字符串类型单元格: '{}' -> {}", stringValue, parsedValue);
+                    return parsedValue;
                 } catch (NumberFormatException e) {
+                    log.warn("无法解析字符串为数字: '{}', 返回0.0", cell.getStringCellValue());
                     return 0.0;
                 }
             default: 
+                log.info("其他类型单元格: {}, 返回0.0", cell.getCellType());
                 return 0.0;
         }
     }

@@ -100,9 +100,6 @@ public class IntelligentDashboardController {
         }
     }
 
-    /**
-     * 健康检查
-     */
     @GetMapping("/health")
     public ResponseEntity<Map<String, Object>> healthCheck() {
         return ResponseEntity.ok(Map.of(

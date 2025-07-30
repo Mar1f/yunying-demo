@@ -8,6 +8,8 @@
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.4.3/purify.min.js"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <style>
         * {
             margin: 0;
@@ -1123,7 +1125,6 @@
                             <button class="quick-btn" onclick="askQuickQuestion('销售数据表现如何，请生成销售趋势图表')">销售表现</button>
                             <button class="quick-btn" onclick="askQuickQuestion('库存是否存在风险，请生成库存分布图表')">库存风险</button>
                             <button class="quick-btn" onclick="askQuickQuestion('客户满意度如何，请生成满意度分析图表')">客户满意度</button>
-<!--                            <button class="quick-btn" onclick="testMarkdownInChat()" style="background-color: #ff9800; color: white;">测试Markdown</button>-->
                         </div>
                     </div>
                 </div>
@@ -1141,9 +1142,6 @@
             initializeCharts();
             setupFileUploads();
             loadDashboardData(); // 添加这行来加载初始数据
-            
-            // 测试Markdown渲染功能
-            testMarkdownRendering();
             
             // 设置当前时间
             updateCurrentTime();
@@ -1173,51 +1171,6 @@
                 }
             });
         });
-
-        // 测试Markdown渲染功能
-        function testMarkdownRendering() {
-            console.log('开始测试Markdown渲染功能...');
-            
-            // 检查库是否加载
-            if (typeof marked === 'undefined') {
-                console.error('❌ Marked库未加载');
-                return;
-            }
-            
-            console.log('✅ Marked库已加载');
-            
-            const testMarkdown = `# 测试标题
-
-这是一个**粗体文本**和*斜体文本*。
-
-## 表格测试
-| 列1 | 列2 | 列3 |
-|-----|-----|-----|
-| 数据1 | 数据2 | 数据3 |
-
-## 列表测试
-- 项目1
-- 项目2
-- 项目3
-
-> 这是一个引用块`;
-            
-            try {
-                const rendered = renderMarkdown(testMarkdown);
-                console.log('Markdown测试结果:', rendered);
-                
-                // 检查是否包含HTML标签
-                if (rendered.includes('<h1>') || rendered.includes('<table>')) {
-                    console.log('✅ Markdown渲染功能正常');
-                } else {
-                    console.log('❌ Markdown渲染功能异常 - 未生成HTML标签');
-                    console.log('原始内容:', testMarkdown);
-                    console.log('渲染结果:', rendered);
-                }
-            } catch (error) {
-                console.error('❌ Markdown渲染测试失败:', error);
-            }
-        }
 
         // 更新当前时间
         function updateCurrentTime() {
@@ -1341,6 +1294,13 @@
             
             messagesContainer.appendChild(messageDiv);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            
+            // 如果是AI消息，触发MathJax重新渲染
+            if (type === 'ai' && typeof MathJax !== 'undefined') {
+                setTimeout(() => {
+                    MathJax.typesetPromise([messageDiv]);
+                }, 100);
+            }
         }
 
         // Markdown渲染函数
@@ -1456,6 +1416,13 @@
                     });
                 }, 300); // 增加延迟确保DOM元素已创建
             }
+            
+            // 如果是AI消息，触发MathJax重新渲染
+            if (type === 'ai' && typeof MathJax !== 'undefined') {
+                setTimeout(() => {
+                    MathJax.typesetPromise([messageDiv]);
+                }, 500); // 延迟更长时间，确保图表也渲染完成
+            }
         }
 
         // 渲染图表
@@ -1487,9 +1454,9 @@
                         trigger: chartData.type === 'pie' ? 'item' : 'axis',
                         formatter: function(params) {
                             if (chartData.type === 'pie') {
-                                return `${params.name}: ${params.value} (${params.percent}%)`;
+                                return `${params.name}: ${params.value.toFixed(2)} (${params.percent}%)`;
                             } else {
-                                return `${params.name}: ${params.value}`;
+                                return `${params.name}: ${params.value.toFixed(2)}`;
                             }
                         }
                     },
@@ -1527,7 +1494,10 @@
                         label: {
                             show: true,
                             position: 'top',
-                            fontSize: 12
+                            fontSize: 12,
+                            formatter: function(params) {
+                                return params.value.toFixed(2);
+                            }
                         }
                     }];
                 } else if (chartData.type === 'line') {
@@ -1557,7 +1527,10 @@
                         },
                         label: {
                             show: true,
-                            fontSize: 12
+                            fontSize: 12,
+                            formatter: function(params) {
+                                return params.value.toFixed(2);
+                            }
                         }
                     }];
                 } else if (chartData.type === 'pie') {
@@ -1579,7 +1552,9 @@
                         label: {
                             show: true,
                             fontSize: 12,
-                            formatter: '{b}: {c} ({d}%)'
+                            formatter: function(params) {
+                                return `${params.name}: ${params.value.toFixed(2)} (${params.percent}%)`;
+                            }
                         }
                     }];
                 }
@@ -1888,7 +1863,7 @@
                 </div>
                 <div class="metric">
                     <span class="metric-label">平均效率</span>
-                    <span class="metric-value">${((productionData.averageEfficiency || 0) * 100).toFixed(1)}%</span>
+                    <span class="metric-value">${((productionData.averageEfficiency || 0) * 100).toFixed(2)}%</span>
                 </div>
                 <div class="metric">
                     <span class="metric-label">缺陷率</span>
@@ -1901,7 +1876,7 @@
             document.getElementById('sales-metrics').innerHTML = `
                 <div class="metric">
                     <span class="metric-label">总销售额</span>
-                    <span class="metric-value">¥${(salesData.totalSales || 0).toLocaleString()}</span>
+                    <span class="metric-value">¥${(salesData.totalSales || 0).toFixed(2)}</span>
                 </div>
                 <div class="metric">
                     <span class="metric-label">销售数量</span>
@@ -1909,7 +1884,7 @@
                 </div>
                 <div class="metric">
                     <span class="metric-label">平均利润率</span>
-                    <span class="metric-value">${((salesData.averageProfitMargin || 0) * 100).toFixed(1)}%</span>
+                    <span class="metric-value">${((salesData.averageProfitMargin || 0) * 100).toFixed(2)}%</span>
                 </div>
                 <div class="metric">
                     <span class="metric-label">销售区域</span>
@@ -1947,7 +1922,7 @@
                 </div>
                 <div class="metric">
                     <span class="metric-label">平均满意度</span>
-                    <span class="metric-value">${(feedbackData.averageSatisfaction || 0).toFixed(1)}/5</span>
+                    <span class="metric-value">${(feedbackData.averageSatisfaction || 0).toFixed(2)}/5</span>
                 </div>
                 <div class="metric">
                     <span class="metric-label">投诉数量</span>
@@ -1998,39 +1973,6 @@
             document.body.appendChild(successDiv);
             
             setTimeout(() => successDiv.remove(), 5000);
-        }
-
-        // 测试Markdown渲染功能
-        function testMarkdownInChat() {
-            console.log('开始测试Markdown渲染...');
-            
-            const testMarkdown = `# 测试标题
-
-这是一个**粗体文本**和*斜体文本*。
-
-## 表格测试
-| 时间 | 任务 | 负责人 |
-|------|------|--------|
-| 第1周 | 收集客户反馈 | 客户服务团队 |
-| 第2周 | 分析问题原因 | 质量管理部 |
-
-## 列表测试
-- 项目1
-- 项目2
-- 项目3
-
-> 这是一个引用块
-
-\`\`\`javascript
-function test() {
-    console.log("Hello World");
-}
-\`\`\``;
-            
-            console.log('测试Markdown内容:', testMarkdown);
-            
-            // 直接添加到聊天界面，不调用AI
-            addChatMessage(testMarkdown, 'ai');
         }
 
         // 添加思考消息

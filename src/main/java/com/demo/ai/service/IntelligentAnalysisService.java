@@ -30,10 +30,7 @@ public class IntelligentAnalysisService {
     private ExcelDataService excelDataService;
 
     private static final String SYSTEM_PROMPT = 
-        "You are a professional automotive industry operations data analyst. You need to analyze production, sales, " +
-        "inventory, customer feedback and other multi-dimensional data based on user questions, and provide " +
-        "professional analysis reports and suggestions. Please explain the meaning behind the data in simple and " +
-        "easy-to-understand language, and provide specific improvement suggestions.\n\n" +
+        "You are a professional automotive industry operations data analyst. You need to analyze production, sales, inventory, customer feedback and other multi-dimensional data based on user questions, and provide professional analysis reports and suggestions. Please explain the meaning behind the data in simple and easy-to-understand language, and provide specific improvement suggestions.\n\n" +
         "You can analyze the following data dimensions:\n" +
         "1. Production data: production efficiency, defect rate, cost control, production line performance\n" +
         "2. Sales data: sales revenue, profit margin, regional distribution, sales channels, customer analysis\n" +
@@ -42,6 +39,16 @@ public class IntelligentAnalysisService {
         "Please provide data-driven analysis reports based on users' specific questions. " +
         "If no relevant data is available, please inform the user and suggest what data should be uploaded.";
 
+    /**
+     * 你是一名专业的汽车行业运营数据分析师。您需要分析生产、销售、盘点、客户反馈等多维度数据，基于用户问题，并提供专业分析报告和建议。请简单解释数据背后的含义，并用通俗易懂的语言，并提供具体的改进建议。
+     * 您可以分析以下数据维度：
+     * 1、生产数据：生产效率、不良率、成本控制、产线性能
+     * 2、销售数据：销售收入、利润率、区域分布、销售渠道、客户分析
+     * 3. 库存数据：库存水平、周转率、缺货风险、仓库管理
+     * 4、客户反馈：满意度、投诉处理、产品改进建议、服务质量
+     * 请根据用户的具体问题提供数据驱动的分析报告。
+     * 如果没有相关数据可用，请告知用户并建议应该上传哪些数据。
+     */
     /**
      * Intelligent conversation analysis
      */
@@ -516,11 +523,31 @@ public class IntelligentAnalysisService {
         // 获取基础统计（使用所有数据，不限制时间范围）
         Map<String, Object> productionSummary = new HashMap<>();
         if (!allProductionData.isEmpty()) {
-            productionSummary.put("totalProduction", allProductionData.stream().mapToInt(ProductionData::getProductionQuantity).sum());
-            productionSummary.put("totalDefects", allProductionData.stream().mapToInt(ProductionData::getDefectQuantity).sum());
-            productionSummary.put("averageEfficiency", allProductionData.stream().mapToDouble(ProductionData::getEfficiencyRate).average().orElse(0.0));
-            productionSummary.put("defectRate", calculateDefectRate(allProductionData));
+            int totalProduction = allProductionData.stream().mapToInt(ProductionData::getProductionQuantity).sum();
+            int totalDefects = allProductionData.stream().mapToInt(ProductionData::getDefectQuantity).sum();
+            double averageEfficiency = allProductionData.stream().mapToDouble(ProductionData::getEfficiencyRate).average().orElse(0.0);
+            double defectRate = calculateDefectRate(allProductionData);
+            
+            log.info("生产数据统计 - 总产量: {}, 缺陷数量: {}, 平均效率: {}, 缺陷率: {}", 
+                    totalProduction, totalDefects, averageEfficiency, defectRate);
+            
+            // 打印每个产品的效率率
+            allProductionData.forEach(data -> {
+                log.info("产品: {}, 效率率: {}", data.getProductName(), data.getEfficiencyRate());
+            });
+            
+            productionSummary.put("totalProduction", totalProduction);
+            productionSummary.put("totalDefects", totalDefects);
+            productionSummary.put("averageEfficiency", averageEfficiency);
+            productionSummary.put("defectRate", defectRate);
             productionSummary.put("productionLines", allProductionData.stream().map(ProductionData::getProductionLine).distinct().collect(Collectors.toList()));
+        } else {
+            log.info("没有生产数据");
+            productionSummary.put("totalProduction", 0);
+            productionSummary.put("totalDefects", 0);
+            productionSummary.put("averageEfficiency", 0.0);
+            productionSummary.put("defectRate", 0.0);
+            productionSummary.put("productionLines", new ArrayList<>());
         }
         
         Map<String, Object> salesSummary = new HashMap<>();
@@ -621,8 +648,36 @@ public class IntelligentAnalysisService {
 
     private Map<String, Object> generateProductionTrendChart() {
         Map<String, Object> chartData = new HashMap<>();
-        List<String> categories = Arrays.asList("1月", "2月", "3月", "4月");
-        List<Integer> data = Arrays.asList(850, 920, 880, 950);
+        
+        // 获取所有生产数据
+        List<ProductionData> allProductionData = excelDataService.getAllProductionData();
+        
+        if (allProductionData.isEmpty()) {
+            // 如果没有数据，返回空图表
+            chartData.put("type", "line");
+            chartData.put("title", "月度生产趋势");
+            chartData.put("categories", new ArrayList<>());
+            chartData.put("data", new ArrayList<>());
+            chartData.put("yAxisTitle", "生产数量");
+            return chartData;
+        }
+        
+        // 按月份分组统计生产数量
+        Map<String, Integer> monthlyProduction = allProductionData.stream()
+            .filter(data -> data.getProductionDate() != null)
+            .collect(Collectors.groupingBy(
+                data -> data.getProductionDate().format(DateTimeFormatter.ofPattern("yyyy-MM")),
+                Collectors.summingInt(ProductionData::getProductionQuantity)
+            ));
+        
+        // 按月份排序
+        List<String> categories = monthlyProduction.keySet().stream()
+            .sorted()
+            .collect(Collectors.toList());
+        
+        List<Integer> data = categories.stream()
+            .map(monthlyProduction::get)
+            .collect(Collectors.toList());
         
         chartData.put("type", "line");
         chartData.put("title", "月度生产趋势");
@@ -674,8 +729,37 @@ public class IntelligentAnalysisService {
 
     private Map<String, Object> generateRegionalSalesChart() {
         Map<String, Object> chartData = new HashMap<>();
-        List<String> categories = Arrays.asList("北京", "上海", "广州", "深圳", "杭州");
-        List<Double> data = Arrays.asList(1200.0, 980.0, 850.0, 1100.0, 750.0);
+        
+        // 获取所有销售数据
+        List<SalesData> allSalesData = excelDataService.getAllSalesData();
+        
+        if (allSalesData.isEmpty()) {
+            // 如果没有数据，返回空图表
+            chartData.put("type", "bar");
+            chartData.put("title", "各地区销售表现");
+            chartData.put("categories", new ArrayList<>());
+            chartData.put("data", new ArrayList<>());
+            chartData.put("yAxisTitle", "销售额 (万元)");
+            return chartData;
+        }
+        
+        // 按地区分组统计销售额
+        Map<String, Double> regionalSales = allSalesData.stream()
+            .filter(data -> data.getRegion() != null && !data.getRegion().trim().isEmpty())
+            .collect(Collectors.groupingBy(
+                SalesData::getRegion,
+                Collectors.summingDouble(SalesData::getSalesAmount)
+            ));
+        
+        // 按销售额降序排序
+        List<String> categories = regionalSales.entrySet().stream()
+            .sorted(Map.Entry.<String, Double>comparingByValue().reversed())
+            .map(Map.Entry::getKey)
+            .collect(Collectors.toList());
+        
+        List<Double> data = categories.stream()
+            .map(regionalSales::get)
+            .collect(Collectors.toList());
         
         chartData.put("type", "bar");
         chartData.put("title", "各地区销售表现");
@@ -708,8 +792,36 @@ public class IntelligentAnalysisService {
 
     private Map<String, Object> generateWarehouseDistributionChart() {
         Map<String, Object> chartData = new HashMap<>();
-        List<String> categories = Arrays.asList("北京仓库", "上海仓库", "广州仓库", "深圳仓库", "杭州仓库");
-        List<Integer> data = Arrays.asList(150, 120, 200, 180, 90);
+        
+        // 获取所有库存数据
+        List<InventoryData> allInventoryData = excelDataService.getAllInventoryData();
+        
+        if (allInventoryData.isEmpty()) {
+            // 如果没有数据，返回空图表
+            chartData.put("type", "pie");
+            chartData.put("title", "各仓库库存分布");
+            chartData.put("categories", new ArrayList<>());
+            chartData.put("data", new ArrayList<>());
+            return chartData;
+        }
+        
+        // 按仓库位置分组统计库存数量
+        Map<String, Integer> warehouseStock = allInventoryData.stream()
+            .filter(data -> data.getWarehouseLocation() != null && !data.getWarehouseLocation().trim().isEmpty())
+            .collect(Collectors.groupingBy(
+                InventoryData::getWarehouseLocation,
+                Collectors.summingInt(InventoryData::getCurrentStock)
+            ));
+        
+        // 按库存数量降序排序
+        List<String> categories = warehouseStock.entrySet().stream()
+            .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
+            .map(Map.Entry::getKey)
+            .collect(Collectors.toList());
+        
+        List<Integer> data = categories.stream()
+            .map(warehouseStock::get)
+            .collect(Collectors.toList());
         
         chartData.put("type", "pie");
         chartData.put("title", "各仓库库存分布");
@@ -741,8 +853,36 @@ public class IntelligentAnalysisService {
 
     private Map<String, Object> generateFeedbackTypeDistributionChart() {
         Map<String, Object> chartData = new HashMap<>();
-        List<String> categories = Arrays.asList("投诉", "建议", "表扬", "咨询");
-        List<Integer> data = Arrays.asList(15, 25, 35, 10);
+        
+        // 获取所有客户反馈数据
+        List<CustomerFeedback> allFeedbackData = excelDataService.getAllFeedbackData();
+        
+        if (allFeedbackData.isEmpty()) {
+            // 如果没有数据，返回空图表
+            chartData.put("type", "pie");
+            chartData.put("title", "客户反馈类型分布");
+            chartData.put("categories", new ArrayList<>());
+            chartData.put("data", new ArrayList<>());
+            return chartData;
+        }
+        
+        // 按反馈类型分组统计数量
+        Map<String, Long> feedbackTypeCount = allFeedbackData.stream()
+            .filter(data -> data.getFeedbackType() != null && !data.getFeedbackType().trim().isEmpty())
+            .collect(Collectors.groupingBy(
+                CustomerFeedback::getFeedbackType,
+                Collectors.counting()
+            ));
+        
+        // 按数量降序排序
+        List<String> categories = feedbackTypeCount.entrySet().stream()
+            .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
+            .map(Map.Entry::getKey)
+            .collect(Collectors.toList());
+        
+        List<Integer> data = categories.stream()
+            .map(type -> feedbackTypeCount.get(type).intValue())
+            .collect(Collectors.toList());
         
         chartData.put("type", "pie");
         chartData.put("title", "客户反馈类型分布");
