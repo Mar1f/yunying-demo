@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.Date;
 
 /**
  * Excel数据管理服务
@@ -80,7 +81,10 @@ public class ExcelDataService {
                 }
                 
                 String key = "production_" + System.currentTimeMillis();
+                log.info("存储前生产数据Map大小: {}", productionDataMap.size());
                 productionDataMap.put(key, dataList);
+                log.info("存储后生产数据Map大小: {}, 存储的key: {}, 数据条数: {}", 
+                        productionDataMap.size(), key, dataList.size());
                 
                 log.info("成功导入生产数据 {} 条", dataList.size());
                 return "成功导入生产数据 " + dataList.size() + " 条";
@@ -263,6 +267,25 @@ public class ExcelDataService {
     }
 
     /**
+     * 获取数据统计信息
+     */
+    public Map<String, Object> getDataStats() {
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("production", getAllProductionData().size());
+        stats.put("sales", getAllSalesData().size());
+        stats.put("inventory", getAllInventoryData().size());
+        stats.put("feedback", getAllFeedbackData().size());
+        
+        // 添加调试信息
+        log.info("数据统计 - 生产数据: {} 条, 销售数据: {} 条, 库存数据: {} 条, 反馈数据: {} 条", 
+                stats.get("production"), stats.get("sales"), stats.get("inventory"), stats.get("feedback"));
+        log.info("生产数据Map大小: {}, 销售数据Map大小: {}, 库存数据Map大小: {}, 反馈数据Map大小: {}", 
+                productionDataMap.size(), salesDataMap.size(), inventoryDataMap.size(), feedbackDataMap.size());
+        
+        return stats;
+    }
+
+    /**
      * 根据日期范围获取生产数据
      */
     public List<ProductionData> getProductionDataByDateRange(LocalDateTime startDate, LocalDateTime endDate) {
@@ -310,38 +333,64 @@ public class ExcelDataService {
     private String getCellValueAsString(Cell cell) {
         if (cell == null) return "";
         switch (cell.getCellType()) {
-            case STRING: return cell.getStringCellValue();
-            case NUMERIC: return String.valueOf((int) cell.getNumericCellValue());
-            case BOOLEAN: return String.valueOf(cell.getBooleanCellValue());
-            default: return "";
+            case STRING: 
+                return cell.getStringCellValue();
+            case NUMERIC: 
+                // 检查是否为日期类型
+                if (DateUtil.isCellDateFormatted(cell)) {
+                    try {
+                        Date date = cell.getDateCellValue();
+                        // 将Java Date转换为yyyy/M/d格式
+                        java.util.Calendar cal = java.util.Calendar.getInstance();
+                        cal.setTime(date);
+                        int year = cal.get(java.util.Calendar.YEAR);
+                        int month = cal.get(java.util.Calendar.MONTH) + 1; // 月份从0开始
+                        int day = cal.get(java.util.Calendar.DAY_OF_MONTH);
+                        return String.format("%d/%d/%d", year, month, day);
+                    } catch (Exception e) {
+                        log.warn("无法获取日期单元格值: {}", e.getMessage());
+                        return "";
+                    }
+                } else {
+                    // 普通数字，转换为字符串
+                    return String.valueOf((int) cell.getNumericCellValue());
+                }
+            case BOOLEAN: 
+                return String.valueOf(cell.getBooleanCellValue());
+            default: 
+                return "";
         }
     }
 
     private Integer getCellValueAsInt(Cell cell) {
         if (cell == null) return 0;
         switch (cell.getCellType()) {
-            case NUMERIC: return (int) cell.getNumericCellValue();
+            case NUMERIC: 
+                return (int) cell.getNumericCellValue();
             case STRING: 
                 try {
                     return Integer.parseInt(cell.getStringCellValue());
                 } catch (NumberFormatException e) {
                     return 0;
                 }
-            default: return 0;
+            default: 
+                return 0;
         }
     }
 
     private Double getCellValueAsDouble(Cell cell) {
         if (cell == null) return 0.0;
         switch (cell.getCellType()) {
-            case NUMERIC: return cell.getNumericCellValue();
+            case NUMERIC: 
+                return cell.getNumericCellValue();
             case STRING: 
                 try {
                     return Double.parseDouble(cell.getStringCellValue());
                 } catch (NumberFormatException e) {
                     return 0.0;
                 }
-            default: return 0.0;
+            default: 
+                return 0.0;
         }
     }
 
@@ -350,24 +399,14 @@ public class ExcelDataService {
             return LocalDateTime.now();
         }
         
-        // 支持的日期格式
-        DateTimeFormatter[] formatters = {
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"),
-            DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss"),
-            DateTimeFormatter.ofPattern("yyyy/M/d HH:mm"),
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"),
-            DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm")
-        };
-        
-        for (DateTimeFormatter formatter : formatters) {
-            try {
-                return LocalDateTime.parse(dateStr, formatter);
-            } catch (Exception e) {
-                // 继续尝试下一个格式
-            }
+        try {
+            // 统一格式为 2025/1/15，添加默认时间 00:00:00
+            String dateWithTime = dateStr.trim() + " 00:00:00";
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/M/d HH:mm:ss");
+            return LocalDateTime.parse(dateWithTime, formatter);
+        } catch (Exception e) {
+            log.warn("无法解析日期: {}, 使用当前时间", dateStr);
+            return LocalDateTime.now();
         }
-        
-        log.warn("无法解析日期: {}, 使用当前时间", dateStr);
-        return LocalDateTime.now();
     }
 } 

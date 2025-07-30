@@ -10,18 +10,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 public class DashboardViewController {
 
     /**
-     * 智能运营看板主页
+     * 主页
      */
     @GetMapping("/")
     public String dashboard() {
         return "dashboard";
     }
 
-    /**
-     * 智能运营看板页面
-     */
-    @GetMapping("/dashboard")
-    public String dashboardPage() {
-        return "dashboard";
-    }
 } 

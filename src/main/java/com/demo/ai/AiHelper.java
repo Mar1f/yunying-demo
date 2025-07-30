@@ -12,11 +12,11 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 /**
- * AI代码助手
+ * AI助手
  */
 @Service
 @Slf4j
-public class AiCodeHelper {
+public class AiHelper {
     @Autowired
     private AiDashScope properties;
 

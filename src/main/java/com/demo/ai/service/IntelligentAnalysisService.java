@@ -1,6 +1,6 @@
 package com.demo.ai.service;
 
-import com.demo.ai.AiCodeHelper;
+import com.demo.ai.AiHelper;
 import com.demo.ai.model.*;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
@@ -24,7 +24,7 @@ public class IntelligentAnalysisService {
     private static final Logger log = LoggerFactory.getLogger(IntelligentAnalysisService.class);
 
     @Autowired
-    private AiCodeHelper aiCodeHelper;
+    private AiHelper aiHelper;
     
     @Autowired
     private ExcelDataService excelDataService;
@@ -68,7 +68,7 @@ public class IntelligentAnalysisService {
             log.info("构建分析提示，数据上下文包含 {} 个维度", dataContext.size());
             
             // Call AI for analysis
-            String analysisResult = aiCodeHelper.chat(analysisPrompt);
+            String analysisResult = aiHelper.chat(analysisPrompt);
             
             log.info("AI分析完成");
             return analysisResult;
@@ -110,7 +110,7 @@ public class IntelligentAnalysisService {
             log.info("构建分析提示，数据上下文包含 {} 个维度", dataContext.size());
             
             // Call AI for analysis
-            String analysisResult = aiCodeHelper.chat(analysisPrompt);
+            String analysisResult = aiHelper.chat(analysisPrompt);
             
             log.info("AI分析完成");
             
@@ -503,19 +503,45 @@ public class IntelligentAnalysisService {
     public Map<String, Object> getRealTimeDashboard() {
         Map<String, Object> dashboard = new HashMap<>();
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime oneMonthAgo = now.minusMonths(1);
         
-        // 获取所有数据
+        // 获取所有数据（不限制时间范围）
         List<ProductionData> allProductionData = excelDataService.getAllProductionData();
         List<SalesData> allSalesData = excelDataService.getAllSalesData();
         List<InventoryData> allInventoryData = excelDataService.getAllInventoryData();
         List<CustomerFeedback> allFeedbackData = excelDataService.getAllFeedbackData();
         
-        // 获取基础统计
-        Map<String, Object> productionSummary = getProductionSummary(oneMonthAgo, now);
-        Map<String, Object> salesSummary = getSalesSummary(oneMonthAgo, now);
+        log.info("获取看板数据 - 生产数据: {} 条, 销售数据: {} 条, 库存数据: {} 条, 反馈数据: {} 条", 
+                allProductionData.size(), allSalesData.size(), allInventoryData.size(), allFeedbackData.size());
+        
+        // 获取基础统计（使用所有数据，不限制时间范围）
+        Map<String, Object> productionSummary = new HashMap<>();
+        if (!allProductionData.isEmpty()) {
+            productionSummary.put("totalProduction", allProductionData.stream().mapToInt(ProductionData::getProductionQuantity).sum());
+            productionSummary.put("totalDefects", allProductionData.stream().mapToInt(ProductionData::getDefectQuantity).sum());
+            productionSummary.put("averageEfficiency", allProductionData.stream().mapToDouble(ProductionData::getEfficiencyRate).average().orElse(0.0));
+            productionSummary.put("defectRate", calculateDefectRate(allProductionData));
+            productionSummary.put("productionLines", allProductionData.stream().map(ProductionData::getProductionLine).distinct().collect(Collectors.toList()));
+        }
+        
+        Map<String, Object> salesSummary = new HashMap<>();
+        if (!allSalesData.isEmpty()) {
+            salesSummary.put("totalSales", allSalesData.stream().mapToDouble(SalesData::getSalesAmount).sum());
+            salesSummary.put("totalQuantity", allSalesData.stream().mapToInt(SalesData::getSalesQuantity).sum());
+            salesSummary.put("averageProfitMargin", allSalesData.stream().mapToDouble(SalesData::getProfitMargin).average().orElse(0.0));
+            salesSummary.put("regions", allSalesData.stream().map(SalesData::getRegion).distinct().collect(Collectors.toList()));
+            salesSummary.put("salesChannels", allSalesData.stream().map(SalesData::getSalesChannel).distinct().collect(Collectors.toList()));
+        }
+        
         Map<String, Object> inventorySummary = getInventorySummary();
-        Map<String, Object> feedbackSummary = getFeedbackSummary(oneMonthAgo, now);
+        
+        Map<String, Object> feedbackSummary = new HashMap<>();
+        if (!allFeedbackData.isEmpty()) {
+            feedbackSummary.put("totalFeedback", allFeedbackData.size());
+            feedbackSummary.put("averageSatisfaction", allFeedbackData.stream().mapToInt(CustomerFeedback::getSatisfactionScore).average().orElse(0.0));
+            feedbackSummary.put("complaints", allFeedbackData.stream().filter(f -> "投诉".equals(f.getFeedbackType())).count());
+            feedbackSummary.put("suggestions", allFeedbackData.stream().filter(f -> "建议".equals(f.getFeedbackType())).count());
+            feedbackSummary.put("pendingIssues", allFeedbackData.stream().filter(f -> "待处理".equals(f.getStatus())).count());
+        }
         
         // 添加详细的产品统计数据
         productionSummary.put("productStatistics", getProductionDataDetail(allProductionData).get("productStatistics"));
@@ -528,6 +554,9 @@ public class IntelligentAnalysisService {
         dashboard.put("inventory", inventorySummary);
         dashboard.put("feedback", feedbackSummary);
         dashboard.put("lastUpdated", now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+        
+        log.info("看板数据构建完成 - 生产统计: {}, 销售统计: {}, 库存统计: {}, 反馈统计: {}", 
+                productionSummary.size(), salesSummary.size(), inventorySummary.size(), feedbackSummary.size());
         
         return dashboard;
     }

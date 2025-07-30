@@ -15,7 +15,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/dashboard")
-@Slf4j
+//@Slf4j
 @CrossOrigin(origins = "*")
 public class IntelligentDashboardController {
 

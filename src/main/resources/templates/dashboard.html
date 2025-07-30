@@ -17,9 +17,9 @@
 
         body {
             font-family: 'Microsoft YaHei', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             min-height: 100vh;
-            color: #333;
+            color: #2c3e50;
         }
 
         .container {
@@ -53,12 +53,14 @@
         .header h1 {
             font-size: 2.2em;
             margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            color: #34495e;
         }
 
         .header p {
             font-size: 1.1em;
-            opacity: 0.9;
+            opacity: 0.8;
+            color: #5a6c7d;
         }
 
         .dashboard-grid {
@@ -69,23 +71,24 @@
         }
 
         .card {
-            background: white;
+            background: rgba(255, 255, 255, 0.95);
             border-radius: 12px;
             padding: 15px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            box-shadow: 0 8px 25px rgba(108, 117, 125, 0.1);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid rgba(108, 117, 125, 0.1);
         }
 
         .card:hover {
             transform: translateY(-3px);
-            box-shadow: 0 12px 35px rgba(0,0,0,0.15);
+            box-shadow: 0 12px 35px rgba(108, 117, 125, 0.15);
         }
 
         .card h3 {
-            color: #667eea;
+            color: #5a6c7d;
             margin-bottom: 12px;
             font-size: 1.1em;
-            border-bottom: 2px solid #f0f0f0;
+            border-bottom: 2px solid #e9ecef;
             padding-bottom: 8px;
         }
 
@@ -97,30 +100,32 @@
             padding: 6px;
             background: #f8f9fa;
             border-radius: 6px;
+            border: 1px solid #e9ecef;
         }
 
         .metric-label {
             font-weight: 500;
-            color: #555;
+            color: #6c757d;
             font-size: 0.85em;
         }
 
         .metric-value {
             font-size: 1em;
             font-weight: bold;
-            color: #667eea;
+            color: #5a6c7d;
         }
 
         .import-section {
-            background: white;
+            background: rgba(255, 255, 255, 0.95);
             border-radius: 12px;
             padding: 15px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            box-shadow: 0 8px 25px rgba(108, 117, 125, 0.1);
             margin-bottom: 12px;
+            border: 1px solid rgba(108, 117, 125, 0.1);
         }
 
         .import-section h3 {
-            color: #667eea;
+            color: #5a6c7d;
             margin-bottom: 12px;
             font-size: 1.1em;
         }
@@ -133,25 +138,27 @@
         }
 
         .import-item {
-            border: 2px dashed #e0e0e0;
+            border: 2px dashed #dee2e6;
             border-radius: 8px;
             padding: 12px;
             text-align: center;
             transition: border-color 0.3s ease;
+            background: #f8f9fa;
         }
 
         .import-item:hover {
-            border-color: #667eea;
+            border-color: #5a6c7d;
+            background: #e9ecef;
         }
 
         .import-item h4 {
-            color: #667eea;
+            color: #5a6c7d;
             margin-bottom: 6px;
             font-size: 0.9em;
         }
 
         .import-item p {
-            color: #666;
+            color: #6c757d;
             font-size: 0.75em;
             margin-bottom: 8px;
         }
@@ -161,7 +168,7 @@
         }
 
         .upload-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #5a6c7d 0%, #6c757d 100%);
             color: white;
             border: none;
             padding: 6px 12px;
@@ -173,6 +180,7 @@
 
         .upload-btn:hover {
             transform: scale(1.05);
+            background: linear-gradient(135deg, #495057 0%, #5a6c7d 100%);
         }
 
         .data-stats {
@@ -182,6 +190,7 @@
             padding: 10px;
             background: #f8f9fa;
             border-radius: 8px;
+            border: 1px solid #e9ecef;
         }
 
         .stat-item {
@@ -191,12 +200,12 @@
         .stat-number {
             font-size: 1.2em;
             font-weight: bold;
-            color: #667eea;
+            color: #5a6c7d;
         }
 
         .stat-label {
             font-size: 0.75em;
-            color: #666;
+            color: #6c757d;
         }
 
         .chart-container {
@@ -206,17 +215,18 @@
 
         .loading {
             text-align: center;
-            color: #667eea;
+            color: #5a6c7d;
             font-style: italic;
         }
 
         .error {
-            color: #dc3545;
+            color: #721c24;
             background: #f8d7da;
             padding: 8px;
             border-radius: 5px;
             margin: 8px 0;
             font-size: 0.9em;
+            border: 1px solid #f5c6cb;
         }
 
         .success {
@@ -226,10 +236,11 @@
             border-radius: 5px;
             margin: 8px 0;
             font-size: 0.9em;
+            border: 1px solid #c3e6cb;
         }
 
         .clear-btn {
-            background: #dc3545;
+            background: #6c757d;
             color: white;
             border: none;
             padding: 8px 15px;
@@ -240,22 +251,23 @@
         }
 
         .clear-btn:hover {
-            background: #c82333;
+            background: #5a6c7d;
         }
 
         /* AI对话区域样式 */
         .ai-chat-card {
-            background: white;
+            background: rgba(255, 255, 255, 0.95);
             border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 30px rgba(108, 117, 125, 0.1);
             height: calc(100vh - 40px);
             display: flex;
             flex-direction: column;
             margin-top: 0;
+            border: 1px solid rgba(108, 117, 125, 0.1);
         }
 
         .ai-chat-card .card-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #5a6c7d 0%, #6c757d 100%);
             color: white;
             border-radius: 15px 15px 0 0;
             padding: 15px 20px;
@@ -278,23 +290,23 @@
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background-color: #4CAF50;
+            background-color: #28a745;
             margin-right: 6px;
         }
 
         .ai-chat-card .status-text {
             font-size: 0.8em;
-            color: rgba(255,255,255,0.8);
+            color: rgba(255,255,255,0.9);
         }
 
         .chat-container {
             display: flex;
             flex-direction: column;
             flex: 1;
-            border: 1px solid #e0e0e0;
+            border: 1px solid #dee2e6;
             border-radius: 0 0 15px 15px;
             overflow: hidden;
-            background-color: #f9f9f9;
+            background-color: #f8f9fa;
         }
 
         .chat-messages {
@@ -314,7 +326,7 @@
             width: 35px;
             height: 35px;
             border-radius: 50%;
-            background-color: #667eea;
+            background-color: #5a6c7d;
             color: white;
             display: flex;
             justify-content: center;
@@ -325,12 +337,13 @@
         }
 
         .message-content {
-            background-color: #e0e0e0;
+            background-color: #e9ecef;
             border-radius: 10px;
             padding: 8px 12px;
             max-width: 85%;
             position: relative;
             flex-grow: 1;
+            border: 1px solid #dee2e6;
         }
 
         .message-header {
@@ -338,23 +351,24 @@
             justify-content: space-between;
             margin-bottom: 4px;
             font-size: 0.8em;
-            color: #555;
+            color: #6c757d;
         }
 
         .message-text {
             font-size: 0.9em;
             line-height: 1.4;
-            color: #333;
+            color: #2c3e50;
         }
 
         .message.user-message .message-content {
-            background-color: #667eea;
+            background-color: #5a6c7d;
             color: white;
             margin-left: auto;
+            border-color: #495057;
         }
 
         .message.user-message .message-header {
-            color: white;
+            color: rgba(255,255,255,0.9);
         }
 
         .message.user-message .message-text {
@@ -365,7 +379,7 @@
             display: flex;
             flex-direction: column;
             padding: 12px;
-            border-top: 1px solid #e0e0e0;
+            border-top: 1px solid #dee2e6;
             background: white;
         }
 
@@ -380,15 +394,17 @@
             margin-right: 8px;
             resize: none;
             padding: 8px 10px;
-            border: 2px solid #e0e0e0;
+            border: 2px solid #dee2e6;
             border-radius: 10px;
             font-size: 13px;
             font-family: inherit;
+            background: #f8f9fa;
         }
 
         .chat-input:focus {
-            border-color: #667eea;
+            border-color: #5a6c7d;
             outline: none;
+            background: white;
         }
 
         .input-actions {
@@ -399,11 +415,11 @@
 
         .char-count {
             font-size: 0.8em;
-            color: #666;
+            color: #6c757d;
         }
 
         .send-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #5a6c7d 0%, #6c757d 100%);
             color: white;
             border: none;
             padding: 6px 12px;
@@ -418,6 +434,7 @@
 
         .send-btn:hover {
             transform: scale(1.05);
+            background: linear-gradient(135deg, #495057 0%, #5a6c7d 100%);
         }
 
         .quick-questions {
@@ -428,30 +445,32 @@
         }
 
         .quick-btn {
-            background: #f0f0f0;
-            border: 1px solid #e0e0e0;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
             border-radius: 15px;
             padding: 6px 12px;
             font-size: 11px;
             cursor: pointer;
             transition: background-color 0.3s ease, border-color 0.3s ease;
+            color: #6c757d;
         }
 
         .quick-btn:hover {
-            background-color: #e0e0e0;
-            border-color: #667eea;
+            background-color: #e9ecef;
+            border-color: #5a6c7d;
+            color: #5a6c7d;
         }
 
         .quick-label {
             font-size: 0.9em;
-            color: #555;
+            color: #6c757d;
             margin-right: 10px;
         }
 
         /* 图表样式 */
         .message-charts {
             margin-top: 15px;
-            border-top: 1px solid #e0e0e0;
+            border-top: 1px solid #dee2e6;
             padding-top: 15px;
         }
 
@@ -460,13 +479,14 @@
             background: white;
             border-radius: 8px;
             padding: 15px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            min-height: 350px; /* 确保图表容器有足够高度 */
+            box-shadow: 0 2px 8px rgba(108, 117, 125, 0.1);
+            min-height: 350px;
+            border: 1px solid #e9ecef;
         }
 
         .message-charts .chart-container h4 {
             margin: 0 0 10px 0;
-            color: #333;
+            color: #2c3e50;
             font-size: 14px;
             font-weight: 500;
             text-align: center;
@@ -479,14 +499,14 @@
         /* 确保图表容器可见 */
         .message-charts .chart-container div[id^="chart-"] {
             min-height: 300px;
-            border: 1px solid #f0f0f0;
+            border: 1px solid #e9ecef;
             border-radius: 4px;
-            background: #fafafa;
+            background: #f8f9fa;
         }
 
         /* 消息内容扩展样式 */
         .message.ai-message .message-content {
-            max-width: 95%; /* 增加AI消息的最大宽度 */
+            max-width: 95%;
         }
 
         .message.ai-message .message-text {
@@ -694,7 +714,7 @@
         /* Markdown样式 */
         .markdown-content {
             line-height: 1.6;
-            color: #333;
+            color: #2c3e50;
         }
 
         .markdown-content h1,
@@ -705,11 +725,11 @@
         .markdown-content h6 {
             margin: 16px 0 8px 0;
             font-weight: 600;
-            color: #2c3e50;
+            color: #34495e;
         }
 
-        .markdown-content h1 { font-size: 1.8em; border-bottom: 2px solid #eee; padding-bottom: 8px; }
-        .markdown-content h2 { font-size: 1.5em; border-bottom: 1px solid #eee; padding-bottom: 6px; }
+        .markdown-content h1 { font-size: 1.8em; border-bottom: 2px solid #e9ecef; padding-bottom: 8px; }
+        .markdown-content h2 { font-size: 1.5em; border-bottom: 1px solid #e9ecef; padding-bottom: 6px; }
         .markdown-content h3 { font-size: 1.3em; }
         .markdown-content h4 { font-size: 1.1em; }
         .markdown-content h5 { font-size: 1em; }
@@ -732,9 +752,9 @@
         .markdown-content blockquote {
             margin: 12px 0;
             padding: 8px 16px;
-            border-left: 4px solid #667eea;
+            border-left: 4px solid #5a6c7d;
             background-color: #f8f9fa;
-            color: #666;
+            color: #6c757d;
         }
 
         .markdown-content code {
@@ -768,7 +788,7 @@
 
         .markdown-content table th,
         .markdown-content table td {
-            border: 1px solid #ddd;
+            border: 1px solid #dee2e6;
             padding: 8px 12px;
             text-align: left;
         }
@@ -789,7 +809,7 @@
 
         .markdown-content strong {
             font-weight: 600;
-            color: #2c3e50;
+            color: #34495e;
         }
 
         .markdown-content em {
@@ -798,7 +818,7 @@
 
         .markdown-content hr {
             border: none;
-            border-top: 1px solid #eee;
+            border-top: 1px solid #e9ecef;
             margin: 20px 0;
         }
 
@@ -829,7 +849,7 @@
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background-color: #667eea;
+            background-color: #5a6c7d;
             animation: thinkingPulse 1.4s ease-in-out infinite both;
         }
 
@@ -862,7 +882,7 @@
 
         .thinking-text p {
             margin: 0 0 10px 0;
-            color: #667eea;
+            color: #5a6c7d;
             font-weight: 500;
         }
 
@@ -875,7 +895,7 @@
         .thinking-steps li {
             margin: 5px 0;
             padding: 3px 0;
-            color: #666;
+            color: #6c757d;
             font-size: 0.9em;
             position: relative;
         }
@@ -888,7 +908,7 @@
             width: 6px;
             height: 6px;
             border-radius: 50%;
-            background-color: #667eea;
+            background-color: #5a6c7d;
             animation: stepPulse 2s ease-in-out infinite;
         }
 
@@ -1055,7 +1075,7 @@
                                 <div class="message-text markdown-content">
                                     <h1>🤖 智能运营分析助手</h1>
                                     
-                                    <p>您好！我是您的智能运营分析助手。我可以帮您分析生产、销售、库存、客户反馈等各个维度的数据。</p>
+                                    <p>您好！我是智能运营分析助手。我可以帮您分析生产、销售、库存、客户反馈等各个维度的数据。</p>
                                     
 <!--                                    <h2>📊 支持的分析功能</h2>-->
 <!--                                    -->
@@ -1242,7 +1262,7 @@
             document.getElementById('sendBtn').style.opacity = '0.6';
 
             // 更新AI状态
-            updateAIStatus('分析中...', '#FF9800');
+            updateAIStatus('分析中...', '#28a745');
 
             // 添加AI思考消息
             const thinkingMessageId = addThinkingMessage();
@@ -1262,17 +1282,17 @@
                 if (data.success) {
                     // 添加AI回复到聊天界面（包含图表）
                     addChatMessageWithCharts(data.analysis, data.charts, 'ai');
-                    updateAIStatus('就绪', '#4CAF50');
+                    updateAIStatus('就绪', '#28a745');
                 } else {
                     addChatMessage('抱歉，分析过程中出现错误：' + (data.message || data.error), 'ai');
-                    updateAIStatus('错误', '#F44336');
+                    updateAIStatus('错误', '#dc3545');
                 }
             } catch (error) {
                 // 移除思考消息
                 removeThinkingMessage(thinkingMessageId);
                 
                 addChatMessage('网络错误，请稍后重试', 'ai');
-                updateAIStatus('错误', '#F44336');
+                updateAIStatus('错误', '#dc3545');
                 console.error('AI分析错误:', error);
             }
         }
@@ -1479,7 +1499,7 @@
                         bottom: '3%',
                         containLabel: true
                     },
-                    color: ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe']
+                    color: ['#5a6c7d', '#6c757d', '#f093fb', '#f5576c', '#4facfe']
                 };
                 
                 if (chartData.type === 'bar') {
@@ -1502,7 +1522,7 @@
                         data: chartData.data,
                         type: 'bar',
                         itemStyle: {
-                            color: '#667eea'
+                            color: '#5a6c7d'
                         },
                         label: {
                             show: true,
@@ -1530,7 +1550,7 @@
                         type: 'line',
                         smooth: true,
                         itemStyle: {
-                            color: '#667eea'
+                            color: '#5a6c7d'
                         },
                         lineStyle: {
                             width: 3
@@ -1708,7 +1728,7 @@
                 series: [{
                     data: [],
                     type: 'bar',
-                    itemStyle: { color: '#667eea' },
+                    itemStyle: { color: '#5a6c7d' },
                     label: { show: true, position: 'top' }
                 }]
             });

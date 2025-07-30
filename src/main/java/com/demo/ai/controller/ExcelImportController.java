@@ -10,11 +10,17 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
+import java.util.HashMap;
+import java.util.List;
+import com.demo.ai.model.ProductionData;
+import com.demo.ai.model.SalesData;
+import com.demo.ai.model.InventoryData;
+import com.demo.ai.model.CustomerFeedback;
 
 /**
  * Excel导入控制器
  */
-@Slf4j
+//@Slf4j
 @RestController
 @RequestMapping("/api/excel")
 @CrossOrigin(origins = "*")
@@ -174,19 +180,11 @@ public class ExcelImportController {
     @GetMapping("/stats")
     public ResponseEntity<Map<String, Object>> getDataStats() {
         try {
-            int productionCount = excelDataService.getAllProductionData().size();
-            int salesCount = excelDataService.getAllSalesData().size();
-            int inventoryCount = excelDataService.getAllInventoryData().size();
-            int feedbackCount = excelDataService.getAllFeedbackData().size();
+            Map<String, Object> stats = excelDataService.getDataStats();
             
             return ResponseEntity.ok(Map.of(
                 "success", true,
-                "data", Map.of(
-                    "production", productionCount,
-                    "sales", salesCount,
-                    "inventory", inventoryCount,
-                    "feedback", feedbackCount
-                ),
+                "data", stats,
                 "timestamp", System.currentTimeMillis()
             ));
         } catch (Exception e) {
@@ -194,6 +192,52 @@ public class ExcelImportController {
             return ResponseEntity.internalServerError().body(Map.of(
                 "success", false,
                 "message", "获取统计失败：" + e.getMessage(),
+                "timestamp", System.currentTimeMillis()
+            ));
+        }
+    }
+
+    /**
+     * 测试数据存储状态
+     */
+    @GetMapping("/debug")
+    public ResponseEntity<Map<String, Object>> debugDataStorage() {
+        try {
+            Map<String, Object> debugInfo = new HashMap<>();
+            
+            // 获取数据统计
+            Map<String, Object> stats = excelDataService.getDataStats();
+            debugInfo.put("stats", stats);
+            
+            // 获取详细数据
+            List<ProductionData> productionData = excelDataService.getAllProductionData();
+            List<SalesData> salesData = excelDataService.getAllSalesData();
+            List<InventoryData> inventoryData = excelDataService.getAllInventoryData();
+            List<CustomerFeedback> feedbackData = excelDataService.getAllFeedbackData();
+            
+            debugInfo.put("productionDataCount", productionData.size());
+            debugInfo.put("salesDataCount", salesData.size());
+            debugInfo.put("inventoryDataCount", inventoryData.size());
+            debugInfo.put("feedbackDataCount", feedbackData.size());
+            
+            // 添加一些示例数据
+            if (!productionData.isEmpty()) {
+                debugInfo.put("productionSample", productionData.get(0));
+            }
+            if (!salesData.isEmpty()) {
+                debugInfo.put("salesSample", salesData.get(0));
+            }
+            
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "debugInfo", debugInfo,
+                "timestamp", System.currentTimeMillis()
+            ));
+        } catch (Exception e) {
+            log.error("调试数据存储失败", e);
+            return ResponseEntity.internalServerError().body(Map.of(
+                "success", false,
+                "message", "调试失败：" + e.getMessage(),
                 "timestamp", System.currentTimeMillis()
             ));
         }
